@@ -7,36 +7,26 @@ generate/aquire signals at 1 second and greater timescales.
 """
 
 import comedi as c
+import common
 
-VERSION = 0.1
+VERSION = common.VERSION
 
-class dioError (Exception) :
+class dioError (common.pycomediError):
     "Digital IO error"
     pass
 
-class DIO_port :
-    def __init__(self, filename="/dev/comedi0", subdevice=2, chan=(0,1,2,3), aref=0, range=0, output=True) :
+class DIO_port (common.PyComediSingleIO) :
+    def __init__(self, output=True, **kwargs) :
         """inputs:
           filename:  comedi device file for your device ("/dev/comedi0").
-          subdevice: the digital IO subdevice (2)
+          subdevice: the digital IO subdevice (-1 for autodetect)
           chan: an iterable of the channels you wish to control ((0,1,2,3))
-          aref: the analog reference for these channels (0)
+          aref: the analog reference for these channels (comedi.AREF_GROUND)
           range: the range for these channels (0)
           output: whether to use the lines as output (vs input) (True)
         """
-        self.filename = filename
-        self.subdev = subdevice
-        self.chan = chan
-        self.aref = aref
-        self.range = range
-        self.output = output
-        self.dev = c.comedi_open(filename)
-        if self.dev < 0 :
-            raise dioError, "Cannot open %s" % self.filename
-        type = c.comedi_get_subdevice_type(self.dev, self.subdev)
-        if type != c.COMEDI_SUBD_DIO :
-            raise dioError, "Comedi subdevice %d has wrong type %d" % (self.subdev, type)
-        if self.output :
+        common.PyComediSingleIO.__init__(self, devtype=c.COMEDI_SUBD_DIO, output=output, **kwargs)
+        if self._output :
             self.set_to_output()
         else :
             self.set_to_input()
@@ -45,37 +35,17 @@ class DIO_port :
         for chan in self.chan :
             rc = c.comedi_dio_config(self.dev, self.subdev, chan, c.COMEDI_OUTPUT)
             if rc != 1 : # yes, comedi_dio_config returns 1 on success, -1 on failure, as of comedilib-0.8.1
+                self._comedi.comedi_perror("comedi_dio_config")
                 raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_OUTPUT, rc)
-        self.output = True
+        self._output = True
     def set_to_input(self) :
         "switch all the channels associated with this object to be inputs"
         for chan in self.chan :
             rc = c.comedi_dio_config(self.dev, self.subdev, chan, c.COMEDI_INPUT)
             if rc != 1 :
+                self._comedi.comedi_perror("comedi_dio_config")
                 raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_INPUT, rc)
-        self.output = False
-    def write_chan_index(self, chan_index, data) :
-        """inputs:
-          chan_index: the channel you wish to write to
-          data: the value you wish to write to that channel
-        """
-        if self.output != True :
-            raise dioError, "Must be an output to write"
-        rc = c.comedi_data_write(self.dev, self.subdev, self.chan[chan_index], self.range, self.aref, data);
-        if rc != 1 : # the number of samples written
-            raise dioError, "comedi_data_write returned %d" % rc
-    def read_chan_index(self, chan_index) :
-        """inputs:
-          chan_index: the channel you wish to read from
-        outputs:
-          data: the value read from that channel
-        """
-        if self.output == True :
-            raise dioError, "Must be an input to read"
-        rc, data = c.comedi_data_read(self.dev, self.subdev, self.chan[chan_index], self.range, self.aref);
-        if rc != 1 : # the number of samples read
-            raise dioError, "comedi_data_read returned %d" % rc
-        return data
+        self._output = False
     def write_port(self, data) :
         """inputs:
           data: decimal number representing data to write
@@ -118,11 +88,13 @@ def _test_DIO_port() :
     data = d.read_port()
     print "port value is %d" % data
     print "dio_obj success"
+    d.close()
 
 def _test_DO_port() :
     p = DO_port
     for data in [0, 1, 2, 3, 4, 5, 6, 7] :
         p(data)
+    p.close()
     print "write_dig_port success"
 
 def test() :
