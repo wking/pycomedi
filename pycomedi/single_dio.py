@@ -18,15 +18,15 @@ class dioError (common.pycomediError):
 class DIO_port (common.PyComediSingleIO) :
     def __init__(self, output=True, **kwargs) :
         """inputs:
-          filename:  comedi device file for your device ("/dev/comedi0").
-          subdevice: the digital IO subdevice (-1 for autodetect)
-          chan: an iterable of the channels you wish to control ((0,1,2,3))
-          aref: the analog reference for these channels (comedi.AREF_GROUND)
-          range: the range for these channels (0)
+          filename:  comedi device file for your device ["/dev/comedi0"].
+          subdevice: the digital IO subdevice [-1 for autodetect]
+          chan: an iterable of the channels you wish to control [(0,1,2,3)]
+          aref: the analog references for these channels [(comedi.AREF_GROUND,)]
+          range: the ranges for these channels [(0,)]
           output: whether to use the lines as output (vs input) (True)
         """
         common.PyComediSingleIO.__init__(self, devtype=c.COMEDI_SUBD_DIO, output=output, **kwargs)
-        if self._output :
+        if self.output :
             self.set_to_output()
         else :
             self.set_to_input()
@@ -37,7 +37,7 @@ class DIO_port (common.PyComediSingleIO) :
             if rc != 1 : # yes, comedi_dio_config returns 1 on success, -1 on failure, as of comedilib-0.8.1
                 self._comedi.comedi_perror("comedi_dio_config")
                 raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_OUTPUT, rc)
-        self._output = True
+        self.output = True
     def set_to_input(self) :
         "switch all the channels associated with this object to be inputs"
         for chan in self.chan :
@@ -45,7 +45,7 @@ class DIO_port (common.PyComediSingleIO) :
             if rc != 1 :
                 self._comedi.comedi_perror("comedi_dio_config")
                 raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_INPUT, rc)
-        self._output = False
+        self.output = False
     def write_port(self, data) :
         """inputs:
           data: decimal number representing data to write
@@ -55,7 +55,7 @@ class DIO_port (common.PyComediSingleIO) :
           1 to chan[2]
           0 to higher channels...
         """
-        for i in range(len(self.chan)) :
+        for i in range(self.nchan) :
             self.write_chan_index(i, (data >> i) % 2)
     def read_port(self) :
         """outputs:
@@ -67,7 +67,7 @@ class DIO_port (common.PyComediSingleIO) :
           0 on higher channels...
         """
         data = 0
-        for i in range(len(self.chan)) :
+        for i in range(self.nchan) :
             data += self.read_chan_index(i) << i
         return data
 
@@ -91,7 +91,7 @@ def _test_DIO_port() :
     d.close()
 
 def _test_DO_port() :
-    p = DO_port
+    p = DO_port()
     for data in [0, 1, 2, 3, 4, 5, 6, 7] :
         p(data)
     p.close()
