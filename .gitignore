@@ -1,0 +1,6 @@
+build
+dist
+dummy_py
+*.pyc
+pycomedi.egg-info
+pycomedi/*.pyc
