@@ -403,7 +403,9 @@ class PyComediSingleIO (PyComediIO) :
         """
         if self.output != True :
             raise pycomediError, "Must be an output to write"
-        rc = c.comedi_data_write(self.dev, self.subdev, self.chan[chan_index], self._range[chan_index], self._aref[chan_index], data);
+        rc = c.comedi_data_write(self.dev, self.subdev, self.chan[chan_index],
+                                 self._range[chan_index],
+                                 self._aref[chan_index], int(data));
         if rc != 1 : # the number of samples written
             self._comedi.comedi_perror("comedi_data_write")
             raise pycomediError, "comedi_data_write returned %d" % rc
