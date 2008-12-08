@@ -356,7 +356,7 @@ class PyComediIO (object) :
         else :
             oor = self._comedi.COMEDI_OOR_NUMBER
         self._comedi.comedi_set_global_oor_behavior(oor)
-        phys = self._comedi.comedi_to_phys(comedi, self._comedi_range[chan_index], self.maxdata[chan_index])
+        phys = self._comedi.comedi_to_phys(int(comedi), self._comedi_range[chan_index], self.maxdata[chan_index])
         if self.verbose :
             print "comedi %d = %g Volts on subdev %d, chan %d, range [%g, %g], max %d" % (comedi, phys, self.subdev, self.chan[chan_index], self._comedi_range[chan_index].max, self._comedi_range[chan_index].min, self.maxdata[chan_index])
         return phys
