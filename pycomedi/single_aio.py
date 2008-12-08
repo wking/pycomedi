@@ -26,7 +26,7 @@ import comedi as c
 import common
 
 VERSION = common.VERSION
-VERBOSE_DEBUG = True
+VERBOSE_DEBUG = False
 
 class sngAioError (common.pycomediError) :
     "Single point Analog IO error"
@@ -114,13 +114,19 @@ def _fit_with_residual(out_data, in_data, channel) :
 
 def plot_data(out_data0, in_data0, residual0, out_data1, in_data1, residual1) :
     try :
-        from pylab import plot, show, subplot
+        from pylab import plot, show, subplot, xlabel, ylabel
         subplot(311)
         plot(out_data0, in_data0, 'r.-', out_data1, in_data1, 'b.')
-        subplot(312)
-        plot(out_data0, residual0, 'r.', residual1, 'b.')
+        ylabel("Read")
+        xlabel("Wrote")
+        if residual0 != None and residual1 != None:
+            subplot(312)
+            plot(out_data0, residual0, 'r.', out_data1, residual1, 'b.')
+            ylabel("Residual")
+            xlabel("Wrote")
         subplot(313)
-        plot(in_data0, 'r.', out_data1, 'b.')
+        plot(in_data0, 'r.', in_data1, 'b.')
+        xlabel("Read")
         show() # if interactive mode is off...
         #raw_input("Press enter to continue") # otherwise, pause
     except ImportError :
@@ -146,6 +152,8 @@ def _test_AIO() :
         in_data1[i] = id[1]
     ai.close()
     ao.close()
+    if VERBOSE_DEBUG :
+        plot_data(out_data0, in_data0, None, out_data1, in_data1, None)
     residual0 = _fit_with_residual(out_data0, in_data0, 0)
     residual1 = _fit_with_residual(out_data1, in_data1, 1)
     if VERBOSE_DEBUG :
