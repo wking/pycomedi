@@ -112,7 +112,7 @@ class cmd (object) :
         rc = 0
         if  very_verbose : 
             print "Testing command:"
-            _print_command(self.cmd)
+            print self
         while i < max_passes :
             rc = self.IO._comedi.comedi_command_test(self.IO.dev, self.cmd)
             if (rc == 0) :
@@ -297,12 +297,12 @@ values samples output on each channel are the same."""
         self._ocmd.cmd.scan_begin_arg = int(1e9/freq)
         self._ocmd.cmd.stop_arg = onsamps
         if VERBOSE :
-            print "Configure the board (%d ns per scan, %d samps)" % (self._icmd.cmd.scan_begin_arg, self._icmd.cmd.stop_arg)
+            print "Configure the board (%d ns per scan, %d samps, %g Hz)" % (self._icmd.cmd.scan_begin_arg, self._icmd.cmd.stop_arg, 1e9/self._ocmd.cmd.scan_begin_arg)
         self._obuffer = out_buffer
         self._onremain = nsamps
-        self._ocmd.test_cmd()
+        self._ocmd.test_cmd(max_passes=2)
         self._ocmd.execute()
-        self._icmd.cmd.scan_begin_arg = int(1e9/freq)
+        self._icmd.cmd.scan_begin_arg = self._ocmd.cmd.scan_begin_arg
         self._icmd.cmd.stop_arg = nsamps
         self._icmd.test_cmd()
         self._inremain = nsamps
