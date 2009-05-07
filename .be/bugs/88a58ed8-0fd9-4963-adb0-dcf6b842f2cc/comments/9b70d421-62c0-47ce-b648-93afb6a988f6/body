@@ -1,0 +1,37 @@
+adding a
+  print phys, type(phys)
+to phys_to_comedi reveals:
+
+In [1]: import unfold, calibcant.calibrate, z_piezo_utils, numpy
+
+In [2]: u=unfold.unfold(controlTemp=False)
+6.74763832659 <type 'float'>
+-6.74763832659 <type 'float'>
+0.0 <type 'float'>
+2.94117647059 <type 'float'>
+-2.94117647059 <type 'float'>
+0.00735294117647 <type 'float'>
+0.0 <type 'float'>
+0.0 <type 'float'>
+0.0 <type 'float'>
+
+In [3]: rates = exp(numpy.linspace(log(250), log(1000), 2))
+
+In [4]: for i in range(10) :
+   ...:     for nmPsRate in rates :
+   ...:         u.unfold(nmPsRate=nmPsRate, rel_setpoint=1, nmDist=800, sBindTime=4)
+   ...:         u.xpWander()
+   ...:         
+   ...:         
+setpoint = 0.850004
+approaching
+0.850003814755 <type 'float'>
+0.850003814755 <type 'float'>
+0.850003814755 <type 'float'>
+0.850003814755 <type 'float'>
+None <type 'NoneType'>
+None <type 'NoneType'>
+---------------------------------------------------------------------------
+<type 'exceptions.TypeError'>             Traceback (most recent call last)
+...
+

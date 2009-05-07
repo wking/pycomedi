@@ -1,0 +1,55 @@
+In [31]: for i in range(10) :
+    for nmPsRate in rates :
+        u.unfold(nmPsRate=nmPsRate, rel_setpoint=1, nmDist=800, sBindTime=4)
+        u.xpWander()
+   ....:         
+   ....:         
+setpoint = 0.846952
+approaching
+0.846952010376 <type 'float'>
+0.846952010376 <type 'float'>
+None <type 'NoneType'>
+---------------------------------------------------------------------------
+<type 'exceptions.TypeError'>             Traceback (most recent call last)
+
+/thor/mroman/<ipython console> in <module>()
+
+/home/wking/.python/unfold.py in unfold(self, setpoint, rel_setpoint, sBindTime, nmDist, nmStep, ppStep, nmPsRate, dataDirectory, fileID)
+    116             except ExceptionTooFar :
+    117                 try : # try for a useful surface distance...
+--> 118                     surfPos = self.getSurfPos(setpoint)
+    119                     print "Too far (surface at %g nm), stepping closer" % surfPos
+    120                 except z_piezo_utils.poorFit, string : # ... oh well, print what we know
+
+/home/wking/.python/unfold.py in getSurfPos(self, setpoint, textVerbose, plotVerbose)
+    266         return out
+    267     def getSurfPos(self, setpoint=2, textVerbose=False, plotVerbose=False) :
+--> 268         return self.zp.pos_out2nm(z_piezo_utils.getSurfPos(self.zp, self.zp.def_V2in(setpoint), textVerbose, plotVerbose))
+    269     def curDef(self) :
+    270         self.zp.updateInputs()
+
+/home/wking/.python/z_piezo.py in def_V2in(self, physical)
+    139     def def_V2in(self, physical) :
+    140         print physical, type(physical) # temporary debugging printout
+--> 141         return self._jump.phys_to_out(physical)
+    142     def curVals(self) :
+    143         return {'Z piezo output': self.curPos(),
+
+/home/wking/.python/z_piezo.py in phys_to_out(self, physical)
+    254         return self.AO.comedi_to_phys(0, output)
+    255     def phys_to_out(self, physical) :
+--> 256         return self.AO.phys_to_comedi(0, physical)
+    257 
+    258 class _z_piezo_ramp :
+
+/thor/wking/lib/python2.5/site-packages/pycomedi-0.1-py2.5.egg/pycomedi/common.py in phys_to_comedi(self, chan_index, phys)
+    362         return phys
+    363     def phys_to_comedi(self, chan_index, phys) :
+--> 364         comedi = self._comedi.comedi_from_phys(phys, self._comedi_range[chan_index], self.maxdata[chan_index])
+    365         if self.verbose :
+    366             print "%g Volts = comedi %d on subdev %d, chan %d, range [%g, %g], max %d" % (phys, comedi, self.subdev, self.chan[chan_index], self._comedi_range[chan_index].max, self._comedi_range[chan_index].min, self.maxdata[chan_index])
+
+<type 'exceptions.TypeError'>: in method 'comedi_from_phys', argument 1 of type 'double'
+
+In [35]: 
+

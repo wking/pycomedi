@@ -324,7 +324,6 @@ values samples output on each channel are the same."""
         self._comedi_internal_trigger(self.AO.subdev)
         self.state = "Armed"
     def start_read(self, in_buffer) :
-        print "_nsamps", self._nsamps
         if self.state != "Armed" :
             raise simAioError, "Invalid state %s" % self.state
         if len(in_buffer) < self._nsamps * self.AI.nchan :

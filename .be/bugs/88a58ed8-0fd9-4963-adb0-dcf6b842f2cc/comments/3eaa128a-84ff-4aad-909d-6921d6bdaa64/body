@@ -1,0 +1,4 @@
+Fixed in unfold.py
+
+When adjusting the stepper (too close or too far), relative setpoint
+was not being taken into account.  Now it is.
