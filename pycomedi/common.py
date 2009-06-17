@@ -18,7 +18,7 @@
 import comedi as c
 import time
 
-VERSION = 0.1
+VERSION = "0.2"
 
 class pycomediError (Exception) :
     "Error in pycomedi.common"

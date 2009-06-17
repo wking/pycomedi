@@ -31,8 +31,8 @@ if version < '2.2.3':
     DistributionMetadata.classifiers = None
     DistributionMetadata.download_url = None
 
-import pycomedi
-VERSION = pycomedi.VERSION
+#from pycomedi import VERSION
+VERSION = "0.2" # importing pycomedi requires comedi on this machine, so copy.
 
 doclines = __doc__.split("\n")
 
