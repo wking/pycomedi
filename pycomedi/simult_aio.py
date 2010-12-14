@@ -36,7 +36,7 @@ AO_TRIGGERS_OFF_AI_START = True
 # the AI Start signal.
 DONT_OUTPUT_LAST_SAMPLE_HACK = True
 
-class simAioError (Exception) :
+class SimAioError (common.PycomediError) :
     "Simultaneous Analog IO error"
     pass
 
@@ -123,14 +123,14 @@ class cmd (object) :
             print "Passing command:\n", self
         if i >= max_passes :
             print "Failing command (%d):\n" % rc, self
-            raise simAioError, "Invalid command: %s" % _cmdtest_message[rc]
+            raise SimAioError, "Invalid command: %s" % _cmdtest_message[rc]
     def execute(self) :
         if VERBOSE :
             print "Loading %s command" % self.cmdTypeString
         rc = self.IO._comedi.comedi_command(self.IO.dev, self.cmd)
         if rc < 0 :
             self.IO._comedi.comedi_perror("comedi_command")
-            raise simAioError, "Error executing %s command %d" % (self.cmdTypeString, rc)
+            raise SimAioError, "Error executing %s command %d" % (self.cmdTypeString, rc)
     def _cmdsrc(self, source) :
         str = ""
         if source & c.TRIG_NONE   : str += "none|"
@@ -249,7 +249,7 @@ class AIO (object) :
             rc = self._comedi.comedi_close(self.dev)
             if rc < 0 :
                 self._comedi.comedi_perror("comedi_close")
-                raise simAioError, "Cannot close %s" % self._filename
+                raise SimAioError, "Cannot close %s" % self._filename
             if VERBOSE :
                 print "Closed %s on fd %d" % (self._filename, self._fd)
             self.AI.fakeClose()
@@ -259,7 +259,7 @@ class AIO (object) :
             self.state = "Closed"
     def open(self) :
         if self.state != "Closed" :
-            raise simAioError, "Invalid state %s" % self.state
+            raise SimAioError, "Invalid state %s" % self.state
         self.dev = self._comedi.comedi_open(self._filename)
         self._fd = self._comedi.comedi_fileno(self.dev)
         if VERBOSE :
@@ -274,7 +274,7 @@ class AIO (object) :
         return array([value]*nsamp*nchan, dtype=int16_rw.DATA_T)
     def setup(self, nsamps=None, freq=1.0, out_buffer=None) :
         if self.state != "Initialized" :
-            raise simAioError, "Invalid state %s" % self.state
+            raise SimAioError, "Invalid state %s" % self.state
         if out_buffer == None : # read-only command
             assert self.AO == None
             assert nsamps > 1
@@ -282,11 +282,11 @@ class AIO (object) :
             assert len(out_buffer) % self.AO.nchan == 0
             nsamps = int(len(out_buffer) / self.AO.nchan)
         if type(out_buffer) != type(_example_array) :
-            raise simAioError, "out_buffer must be a numpy array, not a %s" % str(type(out_buffer))
+            raise SimAioError, "out_buffer must be a numpy array, not a %s" % str(type(out_buffer))
         if DONT_OUTPUT_LAST_SAMPLE_HACK :
             for i in range(1, self.AO.nchan+1) : # i in [1, ... ,nchan]
                 if out_buffer[-i] != out_buffer[-self.AO.nchan-i] :
-                    raise simAioError, """To ensure that you are not suprised by the effects of the
+                    raise SimAioError, """To ensure that you are not suprised by the effects of the
 DONT_OUTPUT_LAST_SAMPLE_HACK flag, please ensure that the last two
 values samples output on each channel are the same."""
             onsamps = nsamps - 1
@@ -312,21 +312,21 @@ values samples output on each channel are the same."""
             print "Write %d output samples to the card" % (nsamps*self.AO.nchan)
         rc = int16_rw.write_samples(self._fd, out_buffer, offset, nsamps*self.AO.nchan, 1)
         if rc != nsamps*self.AO.nchan :
-            raise simAioError, "Error %d writing output buffer\n" % rc
+            raise SimAioError, "Error %d writing output buffer\n" % rc
         self._onremain -= nsamps
         self.state = "Setup"
     def arm(self) :
         if self.state != "Setup" :
-            raise simAioError, "Invalid state %s" % self.state 
+            raise SimAioError, "Invalid state %s" % self.state 
         if VERBOSE :
             print "Arm the analog ouptut"
         self._comedi_internal_trigger(self.AO.subdev)
         self.state = "Armed"
     def start_read(self, in_buffer) :
         if self.state != "Armed" :
-            raise simAioError, "Invalid state %s" % self.state
+            raise SimAioError, "Invalid state %s" % self.state
         if len(in_buffer) < self._nsamps * self.AI.nchan :
-            raise simAioError, "in_buffer not long enough (size %d < required %d)" \
+            raise SimAioError, "in_buffer not long enough (size %d < required %d)" \
                 % (len(in_buffer), self._nsamps * self.AI.nchan)
 
         if VERBOSE :
@@ -341,7 +341,7 @@ values samples output on each channel are the same."""
                 print "Read %d input samples from the card" % (nsamps*self.i_nchan)
             rc = int16_rw.read_samples(self._fd, in_buffer, offset, nsamps*self.AI.nchan, 20)
             if rc != nsamps*self.AI.nchan :
-                raise simAioError, "Error %d reading input buffer\n" % rc
+                raise SimAioError, "Error %d reading input buffer\n" % rc
             self._inremain -= nsamps
             # write half a buffer
             nsamps = min(self._onremain, self.buffsize/2)
@@ -351,7 +351,7 @@ values samples output on each channel are the same."""
                     print "Write %d output samples to the card" % (nsamps*self.AO.nchan)
                 rc = int16_rw.write_samples(self._fd, self._obuffer, offset, nsamps*self.AO.nchan, 20)
                 if rc != nsamps*self.AO.nchan :
-                    raise simAioError, "Error %d writing output buffer\n" % rc
+                    raise SimAioError, "Error %d writing output buffer\n" % rc
                 self._onremain -= nsamps
     def _comedi_internal_trigger(self, subdevice) :
         data = self._comedi.chanlist(1) # by luck, data is an array of lsampl_t (unsigned ints), as is chanlist
@@ -374,11 +374,11 @@ values samples output on each channel are the same."""
         rc = self._comedi.comedi_cancel(self.dev, self.AO.subdev)
         if rc < 0 :
             self._comedi.comedi_perror("comedi_cancel")
-            raise simAioError, "Error cleaning up output command"
+            raise SimAioError, "Error cleaning up output command"
         rc = self._comedi.comedi_cancel(self.dev, self.AI.subdev)
         if rc < 0 :
             self._comedi.comedi_perror("comedi_cancel")
-            raise simAioError, "Error cleaning up input command"
+            raise SimAioError, "Error cleaning up input command"
         self.state = "Initialized"
 
 

@@ -26,7 +26,7 @@ class PycomediError (Exception) :
 def _expand_tuple(tup, length) : 
     "Expand an iterable TUP to a tuple of LENGTH by repeating the last element"
     if len(tup) > length :
-        raise simAioError, "Tuple too long."
+        raise ValueError('tuple %s has more than %d elements.' % (tup, length))
     elif len(tup) < length :
         temp_tup = tup + tuple((tup[-1],)*(length-len(tup)))
         tup = temp_tup
