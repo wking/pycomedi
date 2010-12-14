@@ -25,7 +25,7 @@ import comedi as c
 import common
 
 
-class dioError (common.PycomediError):
+class SngDioError (common.PycomediError):
     "Digital IO error"
     pass
 
@@ -50,7 +50,7 @@ class DIO_port (common.PyComediSingleIO) :
             rc = c.comedi_dio_config(self.dev, self.subdev, chan, c.COMEDI_OUTPUT)
             if rc != 1 : # yes, comedi_dio_config returns 1 on success, -1 on failure, as of comedilib-0.8.1
                 self._comedi.comedi_perror("comedi_dio_config")
-                raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_OUTPUT, rc)
+                raise SngDioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_OUTPUT, rc)
         self.output = True
     def set_to_input(self) :
         "switch all the channels associated with this object to be inputs"
@@ -58,7 +58,7 @@ class DIO_port (common.PyComediSingleIO) :
             rc = c.comedi_dio_config(self.dev, self.subdev, chan, c.COMEDI_INPUT)
             if rc != 1 :
                 self._comedi.comedi_perror("comedi_dio_config")
-                raise dioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_INPUT, rc)
+                raise SngDioError, 'comedi_dio_config("%s", %d, %d, %d) returned %d' % (self.filename, self.subdev, chan, c.COMEDI_INPUT, rc)
         self.output = False
     def write_port(self, data) :
         """inputs:

@@ -27,7 +27,7 @@ import common
 
 VERBOSE_DEBUG = False
 
-class sngAioError (common.PycomediError) :
+class SngAioError (common.PycomediError) :
     "Single point Analog IO error"
     pass
 
@@ -82,7 +82,7 @@ class AO (common.PyComediSingleIO) :
         common.PyComediIO.__init__(self, devtype=c.COMEDI_SUBD_AO, output=True, **kwargs)
     def write(self, data) :
         if len(data) != self.nchan :
-            raise sngAioError,  "data length %d != the number of channels (%d)" % (len(data), self.nchan)
+            raise SngAioError,  "data length %d != the number of channels (%d)" % (len(data), self.nchan)
         for i in range(self.nchan) :
             self.write_chan_index(i, data[i])
 
@@ -104,7 +104,7 @@ def _fit_with_residual(out_data, in_data, channel) :
     print "p = ", p_value # probablility of measuring this ?slope? for non-correlated, normally-distruibuted data
     print "err = ", std_err # root mean sqared error of best fit
     if gradient < .7 or p_value > 0.05 :
-        raise sngAioError, "Out channel %d != in channel %d" % (channel, channel)
+        raise SngAioError, "Out channel %d != in channel %d" % (channel, channel)
     residual = zeros((len(out_data),))
     for i in range(len(out_data)) :
         pred_y = intercept + gradient * out_data[i]
