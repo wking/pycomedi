@@ -25,7 +25,7 @@ import comedi as c
 import common
 
 
-class dioError (common.pycomediError):
+class dioError (common.PycomediError):
     "Digital IO error"
     pass
 

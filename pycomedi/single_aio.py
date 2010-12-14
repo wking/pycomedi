@@ -27,7 +27,7 @@ import common
 
 VERBOSE_DEBUG = False
 
-class sngAioError (common.pycomediError) :
+class sngAioError (common.PycomediError) :
     "Single point Analog IO error"
     pass
 

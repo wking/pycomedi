@@ -19,7 +19,7 @@ import comedi as c
 import time
 
 
-class pycomediError (Exception) :
+class PycomediError (Exception) :
     "Error in pycomedi.common"
     pass
 
@@ -225,7 +225,7 @@ class PyComediIO (object) :
                open device (None for internal open)
         Note that neither aref nor range need to be the same length as
         the channel tuple.  If they are shorter, their last entry will
-        be repeated as needed.  If they are longer, pycomediError will
+        be repeated as needed.  If they are longer, PycomediError will
         be raised (was: their extra entries will not be used).
         """
         self.verbose = False
@@ -250,7 +250,7 @@ class PyComediIO (object) :
             dev = self._comedi.comedi_open(self.filename)
             if dev < 0 :
                 self._comedi.comedi_perror("comedi_open")
-                raise pycomediError, "Cannot open %s" % self.filename
+                raise PycomediError, "Cannot open %s" % self.filename
             self.fakeOpen(dev)
     def fakeOpen(self, dev):
         """fake open: if you open the comedi device file yourself, use this
@@ -258,7 +258,7 @@ class PyComediIO (object) :
         port "Open".
         """
         if dev < 0 :
-            raise pycomediError, "Invalid file descriptor %d" % dev
+            raise PycomediError, "Invalid file descriptor %d" % dev
         self.dev = dev
         self.state = "Open"
     def close(self) :
@@ -266,7 +266,7 @@ class PyComediIO (object) :
             rc = self._comedi.comedi_close(self.dev)
             if rc < 0 :
                 self._comedi.comedi_perror("comedi_close")
-                raise pycomediError, "Cannot close %s" % self.filename
+                raise PycomediError, "Cannot close %s" % self.filename
             self.fakeClose()
     def fakeClose(self):
         """fake close: if you want to close the comedi device file yourself,
@@ -292,14 +292,14 @@ class PyComediIO (object) :
             self.subdev = self._comedi.comedi_find_subdevice_by_type(self.dev, self._devtype, 0) # 0 is starting subdevice
             if self.subdev < 0 :
                 self._comedi.comedi_perror("comedi_find_subdevice_by_type")
-                raise pycomediError, "Could not find a %d device" % (self._devtype)
+                raise PycomediError, "Could not find a %d device" % (self._devtype)
         else :
             self.subdev = subdevice
             type = self._comedi.comedi_get_subdevice_type(self.dev, self.subdev)
             if type != self._devtype :
                 if type < 0 :
                     self._comedi.comedi_perror("comedi_get_subdevice_type")
-                raise pycomediError, "Comedi subdevice %d has wrong type %d" % (self.subdev, type)
+                raise PycomediError, "Comedi subdevice %d has wrong type %d" % (self.subdev, type)
         self.flags = SubdeviceFlags(self._comedi)
         self.updateFlags()
     def updateFlags(self) :
@@ -320,7 +320,7 @@ class PyComediIO (object) :
           rng: the ranges for these channels [(0,)]
         Note that neither aref nor rng need to be the same length as
         the channel tuple.  If they are shorter, their last entry will
-        be repeated as needed.  If they are longer, pycomediError will
+        be repeated as needed.  If they are longer, PycomediError will
         be raised (was: their extra entries will not be used).
         """
         self.chan = chan
@@ -333,12 +333,12 @@ class PyComediIO (object) :
         self.cr_chan = self._comedi.chanlist(self.nchan)
         for i,chan,aref,rng in zip(range(self.nchan), self.chan, self._aref, self._range) :
             if int(chan) != chan :
-                raise pycomediError, "Channels must be integers, not %s" % str(chan)
+                raise PycomediError, "Channels must be integers, not %s" % str(chan)
             if chan >= subdev_n_chan :
-                raise pycomediError, "Channel %d > subdevice %d's largest chan %d" % (chan, self.subdev, subdev_n_chan-1)
+                raise PycomediError, "Channel %d > subdevice %d's largest chan %d" % (chan, self.subdev, subdev_n_chan-1)
             n_range = self._comedi.comedi_get_n_ranges(self.dev, self.subdev, chan)
             if rng > n_range :
-                raise pycomediError, "Range %d > subdevice %d, chan %d's largest range %d" % (rng, subdev, chan, n_range-1)
+                raise PycomediError, "Range %d > subdevice %d, chan %d's largest range %d" % (rng, subdev, chan, n_range-1)
             maxdata = self._comedi.comedi_get_maxdata(self.dev, self.subdev, chan)
             self.maxdata.append(maxdata)
             comrange = self._comedi.comedi_get_range(self.dev, self.subdev, chan, rng)
@@ -391,7 +391,7 @@ class PyComediSingleIO (PyComediIO) :
                open device (None for internal open)
         Note that neither aref nor range need to be the same length as
         the channel tuple.  If they are shorter, their last entry will
-        be repeated as needed.  If they are longer, pycomediError will
+        be repeated as needed.  If they are longer, PycomediError will
         be raised (was: their extra entries will not be used).
         """
         PyComediIO.__init__(self, **kwargs)
@@ -401,13 +401,13 @@ class PyComediSingleIO (PyComediIO) :
           data: the value you wish to write to that channel
         """
         if self.output != True :
-            raise pycomediError, "Must be an output to write"
+            raise PycomediError, "Must be an output to write"
         rc = c.comedi_data_write(self.dev, self.subdev, self.chan[chan_index],
                                  self._range[chan_index],
                                  self._aref[chan_index], int(data));
         if rc != 1 : # the number of samples written
             self._comedi.comedi_perror("comedi_data_write")
-            raise pycomediError, "comedi_data_write returned %d" % rc
+            raise PycomediError, "comedi_data_write returned %d" % rc
     def read_chan_index(self, chan_index) :
         """inputs:
           chan_index: the channel you wish to read from
@@ -415,10 +415,10 @@ class PyComediSingleIO (PyComediIO) :
           data: the value read from that channel
         """
         if self.output != False :
-            raise pycomediError, "Must be an input to read"
+            raise PycomediError, "Must be an input to read"
         rc, data = c.comedi_data_read(self.dev, self.subdev, self.chan[chan_index], self._range[chan_index], self._aref[chan_index]);
         if rc != 1 : # the number of samples read
             self._comedi.comedi_perror("comedi_data_read")
-            raise pycomediError, "comedi_data_read returned %d" % rc
+            raise PycomediError, "comedi_data_read returned %d" % rc
         return data
 
