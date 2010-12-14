@@ -1,5 +1,5 @@
 # Use Comedi drivers for single-shot analog input/output
-# Copyright (C) 2007,2008  W. Trevor King
+# Copyright (C) 2007-2010  W. Trevor King
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ generate/aquire signals at 1 second and greater timescales.
 import comedi as c
 import common
 
-VERSION = common.VERSION
 VERBOSE_DEBUG = False
 
 class sngAioError (common.pycomediError) :

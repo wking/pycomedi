@@ -1,5 +1,5 @@
 # Some Comedi operations common to analog and digital IO
-# Copyright (C) 2007,2008  W. Trevor King
+# Copyright (C) 2007-2010  W. Trevor King
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 import comedi as c
 import time
 
-VERSION = "0.2"
 
 class pycomediError (Exception) :
     "Error in pycomedi.common"

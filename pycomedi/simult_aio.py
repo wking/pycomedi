@@ -1,5 +1,5 @@
 # Simultaneous, finite, buffered analog inpout/output using comedi drivers
-# Copyright (C) 2007,2008  W. Trevor King
+# Copyright (C) 2007-2010  W. Trevor King
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ from time import sleep
 from scipy.stats import linregress
 from os import system
 
-VERSION = common.VERSION
 #VERBOSE = True
 VERBOSE = False
 AO_TRIGGERS_OFF_AI_START = True
