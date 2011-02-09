@@ -1,0 +1,74 @@
+Import required modules.
+
+>>> from pycomedi.classes import Device, DataChannel
+>>> from pycomedi.constants import SUBDEVICE_TYPE, AREF, UNIT
+
+Open a device.
+
+>>> device = Device('/dev/comedi0')
+>>> device.open()
+
+Get your I/O subdevice (alternatively, use `device.subdevice()` to
+select the subdevice directly by index).
+
+>>> subdevice = device.find_subdevice_by_type(SUBDEVICE_TYPE.ai)
+
+Generate a list of channels you wish to control.
+
+>>> channels = [subdevice.channel(i, factory=DataChannel, aref=AREF.diff)
+...             for i in (0, 1, 2, 3)]
+
+Configure the channels.
+
+>>> for chan in channels:
+...     chan.range = chan.find_range(unit=UNIT.volt, min=0, max=5)
+
+Read/write sequentially.
+
+>>> value = [c.data_read_delayed(nano_sec=1e3) for c in channels]
+>>> value  # doctest: +SKIP
+[0, 9634, 0, 15083]
+
+TODO: convert to physical values.
+
+Close the device when you're done.
+
+>>> device.close()
+
+
+
+As a more elaborate test, we can cable AO0 into AI0 and sweep the
+voltage.
+
+>>> from numpy import linspace
+>>> from scipy.stats import linregress
+>>> device.open()
+>>> ai_subdevice = device.find_subdevice_by_type(SUBDEVICE_TYPE.ai)
+>>> ao_subdevice = device.find_subdevice_by_type(SUBDEVICE_TYPE.ao)
+>>> ai_channel = ai_subdevice.channel(0, factory=DataChannel, aref=AREF.diff)
+>>> ao_channel = ao_subdevice.channel(0, factory=DataChannel, aref=AREF.diff)
+>>> ai_channel.range = ai_channel.find_range(unit=UNIT.volt, min=0, max=5)
+>>> ao_channel.range = ao_channel.find_range(unit=UNIT.volt, min=0, max=5)
+>>> ao_maxdata = ao_channel.get_maxdata()
+>>> ai_maxdata = ai_channel.get_maxdata()
+>>> ao_start = 0.3 * ao_maxdata
+>>> ao_stop = 0.7 * ao_maxdata
+>>> points = 10
+>>> ao_data = linspace(ao_start, ao_stop, points)
+>>> ai_data = []
+>>> for i in range(points):
+...     written = ao_channel.data_write(ao_data[i])
+...     assert written == 1, written
+...     ai_data.append(ai_channel.data_read_delayed(nano_sec=1e3))
+>>> ao_data
+>>> ai_data
+>>> scaled_ao_data = [d/float(ao_maxdata) for d in ao_data]
+>>> scaled_ai_data = [d/float(ai_maxdata) for d in ai_data]
+>>> gradient,intercept,r_value,p_value,std_err = linregress(
+...     scaled_ao_data, scaled_ai_data)
+>>> gradient
+>>> intercept
+>>> r_value
+>>> p_value
+>>> std_err
+>>> device.close()

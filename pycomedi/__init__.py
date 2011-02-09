@@ -1,5 +1,4 @@
-# PyComedi provides an object-oriented interface to the Comedi drivers.
-# Copyright (C) 2008-2010  W. Trevor King
+# Copyright (C) 2008-2011  W. Trevor King
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,4 +13,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = '0.2'
+import logging as _logging
+
+
+__version__ = '0.3'
+
+
+LOG = _logging.getLogger('pycomedi')
+"Pycomedi logger"
+
+LOG.setLevel(_logging.DEBUG)
+h = _logging.StreamHandler()
+h.setLevel(_logging.WARN)
+f = _logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+h.setFormatter(f)
+LOG.addHandler(h)
+del h, f
+
+
+class PyComediError (Exception):
+    "Error in pycomedi"
+    pass

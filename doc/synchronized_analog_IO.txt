@@ -1,0 +1,139 @@
+Import required modules.
+
+>>> from numpy import arange, linspace, zeros, sin, pi
+>>> from pycomedi.classes import (Device, StreamingSubdevice, DataChannel,
+...     Chanlist)
+>>> from pycomedi.constants import (AREF, CMDF, INSN, SUBDEVICE_TYPE, TRIG_SRC,
+...     UNIT)
+>>> from pycomedi.utility import inttrig_insn, subdevice_dtype, Reader, Writer
+
+Open a device.
+
+>>> device = Device('/dev/comedi0')
+>>> device.open()
+
+Get your I/O subdevices (alternatively, use `device.subdevice()` to
+select the subdevice directly by index).
+
+>>> ai_subdevice = device.find_subdevice_by_type(SUBDEVICE_TYPE.ai,
+...     factory=StreamingSubdevice)
+>>> ao_subdevice = device.find_subdevice_by_type(SUBDEVICE_TYPE.ao,
+...     factory=StreamingSubdevice)
+
+Generate a list of channels you wish to control.
+
+>>> ai_channels = Chanlist(
+...     [ai_subdevice.channel(i, factory=DataChannel, aref=AREF.diff)
+...      for i in (0, 1, 2, 3)])
+>>> ao_channels = Chanlist(
+...     [ao_subdevice.channel(i, factory=DataChannel, aref=AREF.diff)
+...      for i in (0, 1)])
+
+Configure the channels.
+
+>>> for chan in ai_channels + ao_channels:
+...     chan.range = chan.find_range(unit=UNIT.volt, min=-10, max=10)
+
+Use the subdevice flags to determine data types.
+
+>>> ai_dtype = subdevice_dtype(ai_subdevice)
+>>> ao_dtype = subdevice_dtype(ao_subdevice)
+
+Allocate buffers (with channel data interleaved).
+
+>>> n_samps = 100
+>>> ai_buffer = zeros((n_samps, len(ai_channels)), dtype=ai_dtype)
+>>> ao_buffer = zeros((n_samps, len(ao_channels)), dtype=ao_dtype)
+
+Initialize output buffer.
+
+>>> midpoint = int(ao_channels[0].get_maxdata()/2)
+>>> bitrange = float(midpoint/2)
+>>> ao_buffer[:,0] = midpoint+bitrange*sin(2*pi*arange(n_samps)/(n_samps-1.0))
+>>> ao_buffer[:,1] = linspace(0, midpoint, n_samps)
+>>> ao_buffer[-1,:] = midpoint
+
+Get rough commands.
+
+>>> frequency = 1000.0  # Hz
+>>> scan_period_ns = int(1e9 / frequency)  # nanosecond period
+>>> ai_subdevice.get_cmd_generic_timed(len(ai_channels), scan_period_ns)
+>>> ai_cmd = ai_subdevice.cmd
+>>> ao_subdevice.get_cmd_generic_timed(len(ao_channels), scan_period_ns)
+>>> ao_cmd = ao_subdevice.cmd
+
+Setup multi-scan run triggering.
+
+>>> ai_cmd.start_src = TRIG_SRC.int
+>>> ai_cmd.start_arg = 0
+>>> ai_cmd.stop_src = TRIG_SRC.count
+>>> ai_cmd.stop_arg = n_samps
+>>> ao_cmd.start_src = TRIG_SRC.ext
+>>> ao_cmd.start_arg = 18  # NI card AI_START1 internal AI start signal
+>>> ao_cmd.stop_src = TRIG_SRC.count
+>>> ao_cmd.stop_arg = n_samps
+
+Setup multi-channel scan triggering (handled by get_cmd_generic_timed?).
+
+ai_cmd.scan_begin_src = TRIG_SRC.timer
+ai_cmd.scan_begin_arg
+ai_cmd.convert_src
+ai_cmd.convert_arg
+ai_cmd.scan_end_src
+ai_cmd.scan_end_arg
+
+Add channel lists.
+
+>>> ai_cmd.chanlist = ai_channels
+>>> ao_cmd.chanlist = ao_channels
+
+Test the commands.
+
+>>> ai_subdevice.cmd = ai_cmd
+>>> ao_subdevice.cmd = ao_cmd
+>>> for i in range(3):
+...     rc = ai_subdevice.command_test()
+...     if rc == None: break
+...     print i, rc
+>>> for i in range(3):
+...     rc = ao_subdevice.command_test()
+...     if rc == None: break
+...     print i, rc
+
+Start the commands.
+
+>>> ao_subdevice.command()
+>>> ai_subdevice.command()
+
+Start the reader and writer threads.
+
+>>> writer = Writer(ao_subdevice, ao_buffer)
+>>> writer.start()
+>>> reader = Reader(ai_subdevice, ai_buffer)
+>>> reader.start()
+
+Arm the AO command.
+
+>>> device.do_insn(inttrig_insn(ao_subdevice))
+1
+
+Trigger AI aquisition, which in turn triggers the AO.
+
+>>> device.do_insn(inttrig_insn(ai_subdevice))
+1
+
+Join the reader and writer threads when they finish.
+
+>>> writer.join()
+>>> reader.join()
+
+>>> ai_buffer  # doctest: +SKIP
+array([[32342, 31572, 30745, 31926],
+       [33376, 31797, 30904, 31761],
+...
+       [31308, 24246, 22215, 21824],
+       [32343, 25044, 22659, 21959]], dtype=uint16)
+
+Close the device when you're done.
+
+>>> device.close()
