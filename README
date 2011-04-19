@@ -46,8 +46,6 @@ Cython_  Comedilib interface  cython            dev-python/cython
 
 .. [#clb] In the `wtk overlay`_.
 
-TODO: Migrate from SWIG bindings to direct calls on comedilib via Cython.
-
 
 Installing by hand
 ------------------
@@ -76,9 +74,9 @@ Integration tests with::
 
     $ nosetests --with-doctest --doctest-extension=txt doc
 
-Internal unit tests with::
+Run both integration tests and internal unit tests with::
 
-    $ nosetests --with-doctest pycomedi
+    $ ./test.sh
 
 
 Licence

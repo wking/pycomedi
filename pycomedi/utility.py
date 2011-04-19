@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"Useful utility functions and classes."
+"Useful utility functions and classes"
 
 import array as _array
 import mmap as _mmap
@@ -21,12 +21,10 @@ import os as _os
 import threading as _threading
 import time as _time
 
-import comedi as _comedi
 import numpy as _numpy
 
 from . import LOG as _LOG
-from . import classes as _classes
-from . import constants as _constants
+from . import constant as _constant
 
 
 # types from comedi.h
@@ -35,54 +33,17 @@ lsampl = _numpy.uint32
 sampl_typecode = 'H'
 lsampl_typecode = 'L'
 
-def subdevice_dtype(subdevice):
+def _subdevice_dtype(subdevice):
     "Return the appropriate `numpy.dtype` based on subdevice flags"
     if subdevice.get_flags().lsampl:
         return lsampl
     return sampl
 
-def subdevice_typecode(subdevice):
+def _subdevice_typecode(subdevice):
     "Return the appropriate `array` type based on subdevice flags"
     if subdevice.get_flags().lsampl:
         return lsampl_typecode
     return sampl_typecode
-
-def sampl_array(list):
-    "Convert a Python list/tuple into a `sampl` array"
-    ret = _comedi.sampl_array(len(list))
-    for i,x in enumerate(list):
-        ret[i] = x
-    return ret
-    #return _array.array(sampl_typecode, list)
-
-def lsampl_array(list):
-    "Convert a Python list/tuple into an `lsampl` array"
-    ret = _comedi.lsampl_array(len(list))
-    for i,x in enumerate(list):
-        ret[i] = x
-    return ret
-    #return _array.array(lsampl_typecode, list)
-
-def set_insn_chanspec(insn, channels):
-    "Configure `insn.chanspec` from the list `channels`"
-    chanlist = _classes.Chanlist(channels)
-    insn.chanspec = chanlist.chanlist()
-
-def set_insn_data(insn, data):
-    "Configure `insn.data` and `insn.n` from the iterable `data`"
-    insn.n = len(data)
-    insn.data = lsampl_array(data)
-
-def set_cmd_chanlist(cmd, channels):
-    "Configure `cmd.chanlist` and `cmd.chanlist_len` from the list `channels`"
-    chanlist = _classes.Chanlist(channels)
-    cmd.chanlist = chanlist.chanlist()
-    cmd.chanlist_len = len(chanlist)
-
-def set_cmd_data(cmd, data):
-    "Configure `cmd.data` and `cmd.data_len` from the iterable `data`"
-    cmd.data = sampl_array(data)
-    cmd.data_len = len(data)
 
 def inttrig_insn(subdevice):
     """Setup an internal trigger for a given `subdevice`
@@ -107,8 +68,8 @@ def inttrig_insn(subdevice):
     .. _section 4.4: http://www.comedi.org/doc/x621.html
     """
     insn = subdevice.insn()
-    insn.insn = _constants.INSN.inttrig.value
-    set_insn_data(insn, [0])
+    insn.insn = _constant.INSN.inttrig.value
+    insn.data = [0]
     return insn
 
 
@@ -122,10 +83,15 @@ class _ReadWriteThread (_threading.Thread):
     def __init__(self, subdevice, buffer, name=None):
         if name == None:
             name = '<%s subdevice %d>' % (
-                self.__class__.__name__, subdevice._index)
+                self.__class__.__name__, subdevice.index)
         self.subdevice = subdevice
         self.buffer = buffer
+        self._setup_buffer()
         super(_ReadWriteThread, self).__init__(name=name)
+
+    def _setup_buffer(self):
+        "Currently just a hook for an MMapWriter hack."
+        pass
 
     def _file(self):
         """File for reading/writing data to `.subdevice`
@@ -134,7 +100,7 @@ class _ReadWriteThread (_threading.Thread):
         it when you are finished.  The file will eventually be closed
         when the backing `Device` instance is closed.
         """
-        return self.subdevice._device.file
+        return self.subdevice.device.file
 
 
 class Reader (_ReadWriteThread):
@@ -213,6 +179,12 @@ class Reader (_ReadWriteThread):
                 shape=self.buffer.shape, dtype=self.buffer.dtype,
                 buffer=buf)
             self.buffer[:] = a
+        #_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
+        #while self.subdevice.get_flags().running:
+            ##_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
+        #    _time.sleep(0)
+        #_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
+        #_time.sleep(1)
 
 
 class Writer (_ReadWriteThread):
@@ -237,9 +209,15 @@ class Writer (_ReadWriteThread):
 
     Run the test writer.
 
-    >>> r = TestWriter(subdevice=None, buffer=buf, name='Writer-doctest')
-    >>> r.start()
-    >>> r.join()
+    >>> preload = 3
+    >>> w = TestWriter(subdevice=None, buffer=buf, name='Writer-doctest',
+    ...                preload=preload)
+    >>> a = _array.array('H')
+    >>> a.fromfile(open(t, 'rb'), preload)
+    >>> a
+    array('H', [0, 10, 1])
+    >>> w.start()
+    >>> w.join()
     >>> a = _array.array('H')
     >>> a.fromfile(open(t, 'rb'), buf.size)
     >>> a
@@ -251,9 +229,14 @@ class Writer (_ReadWriteThread):
 
     >>> f.seek(0)
     >>> buf = _array.array('H', [2*x for x in buf.flat])
-    >>> r = TestWriter(subdevice=None, buffer=buf, name='Writer-doctest')
-    >>> r.start()
-    >>> r.join()
+    >>> w = TestWriter(subdevice=None, buffer=buf, name='Writer-doctest',
+    ...                preload=preload)
+    >>> a = _array.array('H')
+    >>> a.fromfile(open(t, 'rb'), preload)
+    >>> a
+    array('H', [0, 20, 2])
+    >>> w.start()
+    >>> w.join()
     >>> a = _array.array('H')
     >>> a.fromfile(open(t, 'rb'), len(buf))
     >>> a
@@ -264,49 +247,79 @@ class Writer (_ReadWriteThread):
     >>> f.close()  # no need for `close(fd)`
     >>> remove(t)
     """
-    def run(self): 
+    def __init__(self, *args, **kwargs):
+        preload = kwargs.pop('preload', 0)
+        super(Writer, self).__init__(*args, **kwargs)
+        if not _builtin_array(self.buffer):  # numpy.ndarray
+            self.buffer = self.buffer.flat
+        preload_buffer = self.buffer[:preload]
+        self._preload_setup = {'remaining_buffer': self.buffer[preload:]}
         f = self._file()
-        self.buffer.tofile(f)
+        preload_buffer.tofile(f)
         f.flush()
+
+    def run(self):
+        remaining_buffer = self._preload_setup['remaining_buffer']
+        del(self._preload_setup)
+
+        f = self._file()
+        remaining_buffer.tofile(f)
+        f.flush()
+        #_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
+        #while self.subdevice.get_flags().running:
+            ##_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
+            #_time.sleep(0)
+        #_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
+        #_time.sleep(1)
 
 
 class _MMapReadWriteThread (_ReadWriteThread):
     "`mmap()`-based reader/wrtier"
     def __init__(self, *args, **kwargs):
+        preload = kwargs.pop('preload', 0)
+        access = kwargs.pop('access')
         super(_MMapReadWriteThread, self).__init__(*args, **kwargs)
-        self._prot = None
+
+        # all sizes measured in bytes
+        builtin_array = _builtin_array(self.buffer)
+        mmap_size = int(self._mmap_size())
+        mmap = _mmap.mmap(self._fileno(), mmap_size, access=access)
+        buffer_offset = 0
+        remaining = self._buffer_bytes(builtin_array)
+        action,mmap_offset = self._initial_action(
+            mmap, buffer_offset, remaining, mmap_size, action_bytes=mmap_size,
+            builtin_array=builtin_array)
+        buffer_offset += action
+        remaining -= action
+        self._preload_setup = {
+            'builtin_array': builtin_array,
+            'mmap_size': mmap_size,
+            'mmap': mmap,
+            'mmap_offset': mmap_offset,
+            'buffer_offset': buffer_offset,
+            'remaining': remaining,
+            }
 
     def _sleep_time(self, mmap_size):
         "Expected seconds needed to write a tenth of the mmap buffer"
         return 0
 
     def run(self):
-        # all sizes measured in bytes
-        builtin_array = _builtin_array(self.buffer)
-        mmap_size = self._mmap_size()
-        sleep_time = self._sleep_time(mmap_size)
-        mmap = _mmap.mmap(
-            self._fileno(), mmap_size, self._prot, _mmap.MAP_SHARED)
-        mmap_offset = 0
-        buffer_offset = 0
-        if builtin_array:
-            remaining = len(self.buffer)
-        else:  # numpy.ndarray
-            remaining = self.buffer.size
-        remaining *= self.buffer.itemsize
-        action = self._initial_action(
-            mmap, buffer_offset, remaining,
-            mmap_size, action_bytes=mmap_size)
-        buffer_offset += action
-        remaining -= action
+        builtin_array = self._preload_setup['builtin_array']
+        mmap_size = self._preload_setup['mmap_size']
+        mmap = self._preload_setup['mmap']
+        mmap_offset = self._preload_setup['mmap_offset']
+        buffer_offset = self._preload_setup['buffer_offset']
+        remaining = self._preload_setup['remaining']
+        del(self._preload_setup)
 
+        sleep_time = self._sleep_time(mmap_size)
         while remaining > 0:
             action_bytes = self._action_bytes()
             if action_bytes > 0:
                 action,mmap_offset = self._act(
-                    mmap, mmap_offset, buffer_offset, remaining,
-                    mmap_size, action_bytes=action_bytes,
-                    builtin_array=builtin_array)
+                    mmap, mmap_offset, buffer_offset, remaining, mmap_size,
+                    action_bytes=action_bytes, builtin_array=builtin_array)
                 buffer_offset += action
                 remaining -= action
             else:
@@ -321,7 +334,7 @@ class _MMapReadWriteThread (_ReadWriteThread):
             wrap = True
         else:
             wrap = False
-        action_size = min(action_bytes, remaining)
+        action_size = min(action_bytes, remaining, mmap_size-mmap_offset)
         self._mmap_action(mmap, buffer_offset, action_size, builtin_array)
         mmap.flush()  # (offset, size),  necessary?  calls msync?
         self._mark_action(action_size)
@@ -343,9 +356,15 @@ class _MMapReadWriteThread (_ReadWriteThread):
 
     # hooks for subclasses
 
+    def _buffer_bytes(self, builtin_array):
+        if builtin_array:
+            return len(self.buffer)*self.buffer.itemsize
+        else:  # numpy.ndtype
+            return self.buffer.size*self.buffer.itemsize
+
     def _initial_action(self, mmap, buffer_offset, remaining, mmap_size,
-                        action_bytes=None):
-        return 0
+                        action_bytes, builtin_array):
+        return (0, 0)
 
     def _mmap_action(self, mmap, offset, size):
         raise NotImplementedError()
@@ -374,13 +393,14 @@ class MMapReader (_MMapReadWriteThread):
     for _from,_to in [
         # convert class and function names
         ('`read()`', '`mmap()`'),
-        ('Writer', 'MMapWriter'),
+        ('Reader', 'MMapReader'),
         ('def _file', _mmap_docstring_overrides)]:
         __doc__ = __doc__.replace(_from, _to)
 
     def __init__(self, *args, **kwargs):
+        assert 'access' not in kwargs
+        kwargs['access'] = _mmap.ACCESS_READ
         super(MMapReader, self).__init__(*args, **kwargs)
-        self._prot = _mmap.PROT_READ
 
     def _mmap_action(self, mmap, offset, size, builtin_array):
         offset /= self.buffer.itemsize
@@ -403,17 +423,44 @@ class MMapWriter (_MMapReadWriteThread):
     __doc__ = Writer.__doc__
     for _from,_to in [
         ('`write()`', '`mmap()`'),
-        ('Reader', 'MMapReader'),
-        ('def _file', _mmap_docstring_overrides)]:
+        ('Writer', 'MMapWriter'),
+        ('def _file', _mmap_docstring_overrides),
+        ("f = _os.fdopen(fd, 'r+')",
+         "f = _os.fdopen(fd, 'r+'); f.write(6*'\\x00'); f.flush(); f.seek(0)"),
+        ("a.fromfile(open(t, 'rb'), buf.size)",
+         "a.fromfile(open(t, 'rb'), w._mmap_size()/a.itemsize)"),
+        ("a.fromfile(open(t, 'rb'), len(buf))",
+         "a.fromfile(open(t, 'rb'), w._mmap_size()/a.itemsize)"),
+        ("array('H', [0, 10, 1, 11, 2, 12])", "array('H', [11, 2, 12])"),
+        ("array('H', [0, 20, 2, 22, 4, 24])", "array('H', [22, 4, 24])")]:
+
         __doc__ = __doc__.replace(_from, _to)
 
     def __init__(self, *args, **kwargs):
+        assert 'access' not in kwargs
+        kwargs['access'] = _mmap.ACCESS_WRITE
         super(MMapWriter, self).__init__(*args, **kwargs)
-        self._prot = _mmap.PROT_WRITE
+
+    def _setup_buffer(self):
         self.buffer = buffer(self.buffer)
+
+    def _buffer_bytes(self, builtin_array):
+        return len(self.buffer)  # because of buffer() in _setup_buffer
+
+    def _initial_action(self, mmap, buffer_offset, remaining, mmap_size,
+                        action_bytes, builtin_array):
+        action_size = min(action_bytes, remaining, mmap_size)
+        self._mmap_action(mmap, buffer_offset, action_size, builtin_array)
+        if action_size == mmap_size:
+            mmap.seek(0)
+            mmap_offset = 0
+        else:
+            mmap_offset = action_size
+        return (action_size, mmap_offset)
 
     def _mmap_action(self, mmap, offset, size, builtin_array):
         mmap.write(self.buffer[offset:offset+size])
+        mmap.flush()
 
     def _mark_action(self, size):
         self.subdevice.mark_buffer_written(size)

@@ -2,5 +2,7 @@ build
 dist
 dummy_py
 *.pyc
+*.c
+*.so
 pycomedi.egg-info
 pycomedi/*.pyc

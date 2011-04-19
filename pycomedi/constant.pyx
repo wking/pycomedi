@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Enums and flags are bundled into class instances for easier browsing.
+"""Enums and flags are bundled into class instances for easier browsing
 
 >>> SUBDEVICE_TYPE  # doctest: +NORMALIZE_WHITESPACE
 [<_NamedInt unused>, <_NamedInt ai>, <_NamedInt ao>, <_NamedInt di>,
@@ -60,27 +60,74 @@ You can treat named integers as Python integers with bitwise operations,
 
 >>> a = TRIG_SRC.now | TRIG_SRC.follow | TRIG_SRC.time | 64
 >>> a
-<_BitwiseOperator 78>
+<BitwiseOperator 78>
 >>> a.value
 78
 >>> TRIG_SRC.none & TRIG_SRC.now
-<_BitwiseOperator 0>
+<BitwiseOperator 0>
 
-But because of the way Python operator overloading works, plain
-integers must go at the end of bitwise chains.
+Because of the way Python operator overloading works [#ops]_, you can
+also start a bitwise chain with an integer.
 
 >>> 64 | TRIG_SRC.now
-Traceback (most recent call last):
-  ...
-TypeError: unsupported operand type(s) for |: 'int' and '_NamedInt'
+<BitwiseOperator 66>
+
+.. [#ops] See `emulating numeric types`_ and `NotImplementedError` in
+   `the standard type hierarchy`_.
+
+.. _emulating numeric types:
+  http://docs.python.org/reference/datamodel.html#emulating-numeric-types
+.. _the standard type hierarchy`_
+  http://docs.python.org/reference/datamodel.html#the-standard-type-hierarchy
 """
 
 from math import log as _log
+import sys as _sys
 
+import numpy as _numpy
 import comedi as _comedi
 
+from pycomedi import LOG as _LOG
 
-class _BitwiseOperator (object):
+
+def bitwise_value(object):
+    """Convenience function for flexible value specification
+
+    This funciton makes it easy for functions and methods to accept
+    either integers or `BitwiseOperator` instances as integer
+    parameters.
+    """
+    if isinstance(object, BitwiseOperator):
+        return object.value
+    return object
+
+
+def _pso(s, o):
+    """External definition of staticmethod until Cython supports the
+    usual syntax.
+
+    http://docs.cython.org/src/userguide/limitations.html#behaviour-of-class-scopes
+    """
+    if isinstance(s, BitwiseOperator):
+        s = s.value
+    if isinstance(o, BitwiseOperator):
+        o = o.value
+    return (long(s), long(o))
+
+
+cdef class BitwiseOperator (object):
+    """General class for bitwise operations.
+
+    This class allows chaining bitwise operations between
+    `_NamedInt`\s and similar objects.
+
+    Because flag values can be large, we cast all values to longs
+    before performing any bitwise operations.  This avoids issues like
+
+    >>> int.__or__(1073741824, 2147483648L)
+    NotImplemented
+    """
+
     def __init__(self, value):
         self.value = value
 
@@ -90,20 +137,20 @@ class _BitwiseOperator (object):
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, self.value)
 
+    _prepare_self_other = staticmethod(_pso)
+
     def __and__(self, other):
-        "Bitwise and acts on `_BitwiseOperator.value`."
-        if isinstance(other, _BitwiseOperator):
-            other = other.value
-        return _BitwiseOperator(int.__and__(self.value, other))
+        "Bitwise and acts on `BitwiseOperator.value`."
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return BitwiseOperator(int(long.__and__(s, o)))
 
     def __or__(self, other):
-        "Bitwise or acts on `_BitwiseOperator.value`."
-        if isinstance(other, _BitwiseOperator):
-            other = other.value
-        return _BitwiseOperator(int.__or__(self.value, other))
+        "Bitwise or acts on `BitwiseOperator.value`."
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return BitwiseOperator(int(long.__or__(s, o)))
 
 
-class _NamedInt (_BitwiseOperator):
+class _NamedInt (BitwiseOperator):
     "A flag or enum item."
     def __init__(self, name, value, doc=None):
         super(_NamedInt, self).__init__(value)
@@ -119,7 +166,7 @@ class _NamedInt (_BitwiseOperator):
 
 class _Enum (list):
     "An enumerated list"
-    def __init__(self, name, prefix, blacklist=None, whitelist=None,
+    def __init__(self, name, prefix='', blacklist=None, whitelist=None,
                  translation=None):
         super(_Enum, self).__init__()
         self.name = name
@@ -150,15 +197,23 @@ class _Enum (list):
 
     def _add_item(self, attr, item_name):
         item_value = getattr(_comedi, attr)
+        if item_value < 0:
+            _LOG.debug('big value for {0:s}: {1:d} ({1:b}) converted to {2:d} ({2:b})'.format(
+                    attr, item_value, (1<<32) + item_value))
+            item_value = (1<<32) + item_value  # flags are unsigned 32 bit integers, but SWIG signs them
         item = _NamedInt(item_name, item_value, doc=attr)
         self.append(item)
-        self._name_keys[item_name] = item
-        if item_value in self._value_keys and item_name:
+
+    def append(self, item):
+        super(_Enum, self).append(item)
+        self._name_keys[item.name] = item
+        if item.value in self._value_keys and item.name:
             raise ValueError('value collision in %s: %s = %s = %#x'
-                             % (self.name, item_name,
-                                self._value_keys[item_value], item_value))
-        self._value_keys[item_value] = item
-        setattr(self, item_name, item)
+                             % (self.name, item.name,
+                                self._value_keys[item.value], item.value))
+        self._value_keys[item.value] = item
+        setattr(self, item.name, item)
+
 
     def index_by_name(self, name):
         return self._name_keys[name]
@@ -176,7 +231,7 @@ class _Flag (_Enum):
         for flag in self:
             if flag.value == 0:
                 self._empty = flag
-            elif flag.value < 0 or _log(flag.value, 2) % 1 != 0:
+            elif flag.value < 0 or abs(_log(flag.value, 2)) % 1 > 1e-13:  # deal with rounding errors
                 if self._all:
                     raise ValueError(
                         'mutliple multi-bit flags in %s: %s = %#x and %s = %#x'
@@ -240,6 +295,9 @@ class FlagValue (object):
 
 # blacklist deprecated values (and those belonging to other _Enums or _Flags)
 
+CR = _Flag('ChanSpec flags', 'CR_', blacklist=['dither', 'deglitch'])
+CR.alt_filter.doc += ' (can also mean "dither" or "deglitch")'
+
 AREF = _Enum('analog_reference', 'AREF_')
 AREF.diff.doc += ' (differential)'
 AREF.other.doc += ' (other / undefined)'
@@ -297,7 +355,7 @@ SDF.busy_owner.doc += ' (device is busy with your job)'
 SDF.locked.doc += ' (subdevice is locked)'
 SDF.lock_owner.doc += ' (you own lock)'
 SDF.maxdata.doc += ' (maxdata depends on channel)'
-SDF.flags.doc += ' (flags depend on channel)'
+SDF.flags.doc += ' (flags depend on channel (BROKEN))'
 SDF.rangetype.doc += ' (range type depends on channel)'
 SDF.soft_calibrated.doc += ' (subdevice uses software calibration)'
 SDF.cmd_write.doc += ' (can do output commands)'
@@ -336,9 +394,30 @@ SUPPORT_LEVEL = _Enum('support_level', 'COMEDI_', whitelist=[
         'unknown_support', 'supported', 'unsupported'])
 
 UNIT = _Enum('unit', 'UNIT_', translation={'mA':'mA'})
+# The mA translation avoids lowercasing to 'ma'.
 
-CB = _Enum('callback_flags', 'COMEDI_CB_', blacklist=['block', 'eobuf'])
-CB.eos.doc += ' (end of scan)'
-CB.eoa.doc += ' (end of acquisition)'
-CB.error.doc += ' (card error during acquisition)'
-CB.overflow.doc += ' (buffer overflow/underflow)'
+CALLBACK = _Enum('callback_flags', 'COMEDI_CB_', blacklist=['block', 'eobuf'])
+CALLBACK.eos.doc += ' (end of scan)'
+CALLBACK.eoa.doc += ' (end of acquisition)'
+CALLBACK.error.doc += ' (card error during acquisition)'
+CALLBACK.overflow.doc += ' (buffer overflow/underflow)'
+
+CONVERSION_DIRECTION = _Enum('conversion_direction', 'COMEDI_', whitelist=[
+        'to_physical', 'from_physical'])
+
+# The following constants aren't declared in comedi.h or comedilib.h,
+# but they should be.
+
+LOGLEVEL = _Enum('log level', '', whitelist=[''])
+LOGLEVEL.append(_NamedInt('silent', 0, doc='Comedilib prints nothing.'))
+LOGLEVEL.append(_NamedInt('bug', 1, doc=(
+            'Comedilib prints error messages when there is a self-consistency '
+            'error (i.e., an internal bug (default).')))
+LOGLEVEL.append(_NamedInt('invalid', 2, doc=(
+            'Comedilib prints an error message when an invalid parameter is '
+            'passed.')))
+LOGLEVEL.append(_NamedInt('error', 3, doc=(
+            'Comedilib prints an error message whenever an error is generated '
+            'in the Comedilib library or in the C library, when called by '
+            'Comedilib.')))
+LOGLEVEL.append(_NamedInt('debug', 4, doc='Comedilib prints a lot of junk.'))

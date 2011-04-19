@@ -1,11 +1,13 @@
 Import required modules.
 
->>> from numpy import arange, linspace, zeros, sin, pi
->>> from pycomedi.classes import (Device, StreamingSubdevice, DataChannel,
-...     Chanlist)
->>> from pycomedi.constants import (AREF, CMDF, INSN, SUBDEVICE_TYPE, TRIG_SRC,
+>>> from numpy import arange, linspace, zeros, sin, pi, float32
+>>> from pycomedi.device import Device
+>>> from pycomedi.subdevice import StreamingSubdevice
+>>> from pycomedi.channel import AnalogChannel
+>>> from pycomedi.chanspec import ChanSpec
+>>> from pycomedi.constant import (AREF, CMDF, INSN, SUBDEVICE_TYPE, TRIG_SRC,
 ...     UNIT)
->>> from pycomedi.utility import inttrig_insn, subdevice_dtype, Reader, Writer
+>>> from pycomedi.utility import inttrig_insn, Reader, Writer
 
 Open a device.
 
@@ -22,12 +24,12 @@ select the subdevice directly by index).
 
 Generate a list of channels you wish to control.
 
->>> ai_channels = Chanlist(
-...     [ai_subdevice.channel(i, factory=DataChannel, aref=AREF.diff)
-...      for i in (0, 1, 2, 3)])
->>> ao_channels = Chanlist(
-...     [ao_subdevice.channel(i, factory=DataChannel, aref=AREF.diff)
-...      for i in (0, 1)])
+>>> ai_channels = [
+...     ai_subdevice.channel(i, factory=AnalogChannel, aref=AREF.diff)
+...     for i in (0, 1, 2, 3)]
+>>> ao_channels = [
+...     ao_subdevice.channel(i, factory=AnalogChannel, aref=AREF.diff)
+...     for i in (0, 1)]
 
 Configure the channels.
 
@@ -36,8 +38,8 @@ Configure the channels.
 
 Use the subdevice flags to determine data types.
 
->>> ai_dtype = subdevice_dtype(ai_subdevice)
->>> ao_dtype = subdevice_dtype(ao_subdevice)
+>>> ai_dtype = ai_subdevice.get_dtype()
+>>> ao_dtype = ao_subdevice.get_dtype()
 
 Allocate buffers (with channel data interleaved).
 
@@ -57,10 +59,10 @@ Get rough commands.
 
 >>> frequency = 1000.0  # Hz
 >>> scan_period_ns = int(1e9 / frequency)  # nanosecond period
->>> ai_subdevice.get_cmd_generic_timed(len(ai_channels), scan_period_ns)
->>> ai_cmd = ai_subdevice.cmd
->>> ao_subdevice.get_cmd_generic_timed(len(ao_channels), scan_period_ns)
->>> ao_cmd = ao_subdevice.cmd
+>>> ai_cmd = ai_subdevice.get_cmd_generic_timed(
+...     len(ai_channels), scan_period_ns)
+>>> ao_cmd = ao_subdevice.get_cmd_generic_timed(
+...     len(ao_channels), scan_period_ns)
 
 Setup multi-scan run triggering.
 
@@ -72,15 +74,6 @@ Setup multi-scan run triggering.
 >>> ao_cmd.start_arg = 18  # NI card AI_START1 internal AI start signal
 >>> ao_cmd.stop_src = TRIG_SRC.count
 >>> ao_cmd.stop_arg = n_samps
-
-Setup multi-channel scan triggering (handled by get_cmd_generic_timed?).
-
-ai_cmd.scan_begin_src = TRIG_SRC.timer
-ai_cmd.scan_begin_arg
-ai_cmd.convert_src
-ai_cmd.convert_arg
-ai_cmd.scan_end_src
-ai_cmd.scan_end_arg
 
 Add channel lists.
 
@@ -128,11 +121,36 @@ Join the reader and writer threads when they finish.
 >>> reader.join()
 
 >>> ai_buffer  # doctest: +SKIP
+array([[32669, 27117, 24827, 23111],
+       [33711, 27680, 25273, 23453],
+...
+       [31627, 24590, 22482, 22045],
+       [32668, 25381, 22937, 22189]], dtype=uint16)
+
 array([[32342, 31572, 30745, 31926],
        [33376, 31797, 30904, 31761],
 ...
        [31308, 24246, 22215, 21824],
        [32343, 25044, 22659, 21959]], dtype=uint16)
+
+Use a converter to convert these to physical values
+
+>>> converters = [c.get_converter() for c in ai_channels]
+>>> ai_physical = zeros(ai_buffer.shape, dtype=float32)
+>>> for i,c in enumerate(converters):
+...     ai_physical[:,i] = c.to_physical(ai_buffer[:,i])
+>>> ai_physical  # doctest: +SKIP
+array([[ -3.00602727e-02,  -1.72442210e+00,  -2.42328525e+00,
+         -2.94697499e+00],
+       [  2.87937731e-01,  -1.55260551e+00,  -2.28717470e+00,
+         -2.84260321e+00],
+...
+       [ -3.48058283e-01,  -2.49561310e+00,  -3.13893342e+00,
+         -3.27229714e+00],
+       [ -3.03654540e-02,  -2.25421524e+00,  -3.00007629e+00,
+         -3.22835135e+00]], dtype=float32)
+>>> [c.range.unit for c in ai_channels]
+[<_NamedInt volt>, <_NamedInt volt>, <_NamedInt volt>, <_NamedInt volt>]
 
 Close the device when you're done.
 

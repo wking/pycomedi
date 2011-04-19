@@ -1,7 +1,8 @@
 Import required modules.
 
->>> from pycomedi.classes import Device, DataChannel
->>> from pycomedi.constants import SUBDEVICE_TYPE, IO_DIRECTION
+>>> from pycomedi.device import Device
+>>> from pycomedi.channel import DigitalChannel
+>>> from pycomedi.constant import SUBDEVICE_TYPE, IO_DIRECTION
 
 Open a device.
 
@@ -15,7 +16,7 @@ select the subdevice directly by index).
 
 Generate a list of channels you wish to control.
 
->>> channels = [subdevice.channel(i, factory=DataChannel)
+>>> channels = [subdevice.channel(i, factory=DigitalChannel)
 ...             for i in (0, 1, 2, 3)]
 
 Configure the channels.
@@ -27,13 +28,13 @@ Read/write either as a block...
 
 >>> value = subdevice.dio_bitfield(base_channel=0)
 >>> value  # doctest: +SKIP
-7
+255L
 
 ... or sequentially.
 
 >>> value = [c.dio_read() for c in channels]
 >>> value  # doctest: +SKIP
-[1, 1, 1, 0]
+[1, 1, 1, 1]
 
 Close the device when you're done.
 
