@@ -83,7 +83,7 @@ Licence
 =======
 
 This project is distributed under the `GNU General Public License
-Version 3`_ or greater.
+Version 2`_ or greater.
 
 
 Author
@@ -107,4 +107,5 @@ wking@drexel.edu
 .. _Git: http://git-scm.com/
 .. _homepage:
      http://www.physics.drexel.edu/~wking/unfolding-disasters/posts/pycomedi/
-.. _GNU General Public License Version 3: http://www.gnu.org/licenses/gpl.txt
+.. _GNU General Public License Version 2:
+     http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
