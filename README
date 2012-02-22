@@ -52,7 +52,7 @@ Installing by hand
 
 Pycomedi is available as a Git_ repository::
 
-    $ git clone http://www.physics.drexel.edu/~wking/code/git/pycomedi.git
+    $ git clone git://tremily.us/pycomedi.git
 
 
 See the homepage_ for details.  To install the checkout, run the
@@ -95,8 +95,7 @@ wking@drexel.edu
 
 .. _Comedi: http://www.comedi.org/
 .. _layman: http://layman.sourceforge.net/
-.. _wtk overlay:
-     http://www.physics.drexel.edu/~wking/unfolding-disasters/posts/Gentoo_overlay
+.. _wtk overlay: http://blog.tremily.us/posts/Gentoo_overlay
 .. _science overlay: http://overlays.gentoo.org/proj/science/wiki/en
 .. _Debian: http://www.debian.org/
 .. _Gentoo: http://www.gentoo.org/
@@ -105,7 +104,6 @@ wking@drexel.edu
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _Cython: http://www.cython.org/
 .. _Git: http://git-scm.com/
-.. _homepage:
-     http://www.physics.drexel.edu/~wking/unfolding-disasters/posts/pycomedi/
+.. _homepage: http://blog.tremily.us/posts/pycomedi/
 .. _GNU General Public License Version 2:
      http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
