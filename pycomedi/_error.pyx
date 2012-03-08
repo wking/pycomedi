@@ -50,14 +50,14 @@ def _comedi_getter(name, is_invalid):
     # Hmm, cannot get function by name, or pass differing function pointers...
     #def comedi_get(function_name, *args, **kwargs):
     def comedi_get(function, *args, **kwargs):
+        #fn = getattr(_comedilib_h, function_name)
+        fn = function  # workaround until I get getattr() working
+        function_name = function.__name__
         if 'error_msg' in kwargs:
             error_msg = kwargs.pop('error_msg')
         else:
             error_msg = 'error while running %s with %s and %s' % (
                 function_name, args, kwargs)
-        #fn = getattr(_comedilib_h, function_name)
-        fn = function  # workaround until I get getattr() working
-        function_name = function.__name__
 
         _LOG.debug('calling %s with %s %s' % (function_name, args, kwargs))
 
