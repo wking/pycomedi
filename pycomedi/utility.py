@@ -275,7 +275,7 @@ class Writer (_ReadWriteThread):
 
 
 class _MMapReadWriteThread (_ReadWriteThread):
-    "`mmap()`-based reader/wrtier"
+    "`mmap()`-based reader/writer"
     def __init__(self, *args, **kwargs):
         preload = kwargs.pop('preload', 0)
         access = kwargs.pop('access')
