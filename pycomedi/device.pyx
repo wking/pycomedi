@@ -48,8 +48,8 @@ cdef class Device (object):
     3
     >>> d.get_n_subdevices()
     14
-    >>> d.get_version_code()
-    (0, 0, 76)
+    >>> d.get_version()
+    (0, 7, 76)
     >>> d.get_driver_name()
     'ni_pcimio'
     >>> s = d.get_read_subdevice()
@@ -138,21 +138,28 @@ cdef class Device (object):
         return ret
 
     def get_version_code(self):
-        """Comedi version code.
+        """Comedi version code as a single integer.
 
         This is a kernel-module level property, but a valid device is
         necessary to communicate with the kernel module.
-
-        Returns a tuple of version numbers, e.g. `(0, 7, 61)`.
         """
         version = _comedilib_h.comedi_get_version_code(self.device)
         if version < 0:
             _error.raise_error(function_name='comedi_get_version_code',
                                 ret=version)
+        return version
+
+    def get_version(self):
+        """Comedi version as a tuple of version numbers.
+
+        Returns the result of `.get_version_code()`, but rephrased as
+        a tuple of version numbers, e.g. `(0, 7, 61)`.
+        """
+        version = self.get_version_code()
         ret = []
         for i in range(3):
-            ret.insert(0, version & (2**8-1))
-            version >>= 2**8  # shift over 8 bits
+            ret.insert(0, version & 0xff)  # grab lowest 8 bits
+            version >>= 8  # shift over 8 bits
         return tuple(ret)
 
     def get_driver_name(self):
