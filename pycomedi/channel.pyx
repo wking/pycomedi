@@ -16,6 +16,7 @@
 
 "Wrap channel-wide Comedi functions in `Channel` and related classes"
 
+cimport cython
 cimport numpy as _numpy
 import numpy as _numpy
 
@@ -41,13 +42,13 @@ cdef class Channel (object):
     >>> d = Device('/dev/comedi0')
     >>> d.open()
     >>> s = d.get_read_subdevice()
-    >>> c = s.channel(0)
+    >>> c = s.channel(index=0)
 
     >>> c.get_maxdata()
     65535L
     >>> c.get_n_ranges()
     16
-    >>> c.get_range(0)
+    >>> c.get_range(index=0)
     <Range unit:volt min:-10.0 max:10.0>
     >>> c.find_range(constant.UNIT.volt, 0, 5)
     <Range unit:volt min:0.0 max:5.0>
@@ -96,6 +97,7 @@ cdef class Channel (object):
         # doesn't support *rng.
         return ret
 
+    @cython.always_allow_keywords(True)
     def get_range(self, index):
         "`Range` instance for the `index`\ed range."
         return self._get_range(index)
