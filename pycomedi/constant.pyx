@@ -170,29 +170,22 @@ cdef class BitwiseOperator (object):
         s,o = BitwiseOperator._prepare_self_other(self, other)
         return BitwiseOperator(int(long.__or__(s, o)))
 
-    def __lt__(self, other):
+    def __richcmp__(self, other, op):
         s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s < o
-
-    def __le__(self, other):
-        s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s <= o
-
-    def __eq__(self, other):
-        s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s == o
-
-    def __ne__(self, other):
-        s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s != o
-
-    def __gt__(self, other):
-        s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s > o
-
-    def __ge__(self, other):
-        s,o = BitwiseOperator._prepare_self_other(self, other)
-        return s >= o
+        if op == 0:
+            return s < o
+        elif op == 1:
+            return s <= o
+        elif op == 2:
+            return s == o
+        elif op == 3:
+            return s != o
+        elif op == 4:
+            return s > o
+        elif op == 5:
+            return s >= o
+        else:
+            raise ValueError(op)
 
 
 class _NamedInt (BitwiseOperator):
