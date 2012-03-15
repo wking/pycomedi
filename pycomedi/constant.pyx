@@ -191,6 +191,9 @@ cdef class BitwiseOperator (object):
         else:
             raise ValueError(op)
 
+    def __reduce__(self):
+        return (BitwiseOperator, (self.value,))
+
 
 class _NamedInt (BitwiseOperator):
     "A flag or enum item."
@@ -204,6 +207,9 @@ class _NamedInt (BitwiseOperator):
 
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, self.name)
+
+    def __reduce__(self):
+        return (_NamedInt, (self.name, self.value, self.doc))
 
 
 class _Enum (list):
@@ -255,7 +261,6 @@ class _Enum (list):
                                 self._value_keys[item.value], item.value))
         self._value_keys[item.value] = item
         setattr(self, item.name, item)
-
 
     def index_by_name(self, name):
         return self._name_keys[name]
