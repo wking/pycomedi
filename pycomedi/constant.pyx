@@ -73,6 +73,26 @@ also start a bitwise chain with an integer.
 >>> 64 | TRIG_SRC.now
 <BitwiseOperator 66>
 
+Rich comparisons with other flags and integers are also supported.
+
+>>> 64 > TRIG_SRC.now
+True
+>>> TRIG_SRC.now > 64
+False
+>>> TRIG_SRC.now >= 2
+True
+>>> TRIG_SRC.now >= 3
+False
+>>> import copy
+>>> TRIG_SRC.now == copy.deepcopy(TRIG_SRC.now)
+True
+>>> TRIG_SRC.now != TRIG_SRC.now
+False
+<<< TRIG_SRC.now <= 2
+True
+<<< TRIG_SRC.now < 3
+False
+
 .. [#ops] See `emulating numeric types`_ and `NotImplementedError` in
    `the standard type hierarchy`_.
 
@@ -149,6 +169,30 @@ cdef class BitwiseOperator (object):
         "Bitwise or acts on `BitwiseOperator.value`."
         s,o = BitwiseOperator._prepare_self_other(self, other)
         return BitwiseOperator(int(long.__or__(s, o)))
+
+    def __lt__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s < o
+
+    def __le__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s <= o
+
+    def __eq__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s == o
+
+    def __ne__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s != o
+
+    def __gt__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s > o
+
+    def __ge__(self, other):
+        s,o = BitwiseOperator._prepare_self_other(self, other)
+        return s >= o
 
 
 class _NamedInt (BitwiseOperator):
