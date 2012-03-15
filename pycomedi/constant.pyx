@@ -88,10 +88,12 @@ False
 True
 >>> TRIG_SRC.now != TRIG_SRC.now
 False
-<<< TRIG_SRC.now <= 2
+>>> TRIG_SRC.now <= 2
 True
-<<< TRIG_SRC.now < 3
+>>> TRIG_SRC.now < 3
 False
+>>> TRIG_SRC.now > None
+True
 
 .. [#ops] See `emulating numeric types`_ and `NotImplementedError` in
    `the standard type hierarchy`_.
@@ -171,6 +173,8 @@ cdef class BitwiseOperator (object):
         return BitwiseOperator(int(long.__or__(s, o)))
 
     def __richcmp__(self, other, op):
+        if other is None:
+            other = self.value - 1
         s,o = BitwiseOperator._prepare_self_other(self, other)
         if op == 0:
             return s < o
