@@ -26,8 +26,8 @@ import numpy as _numpy
 
 cimport _comedi_h
 cimport _comedilib_h
-import  constant as _constant
-
+import constant as _constant
+import utility as _utility
 
 cdef void _setup_comedi_polynomial_t(
     _comedilib_h.comedi_polynomial_t *p, coefficients, expansion_origin):
@@ -57,7 +57,7 @@ cdef object _convert(
     if to_physical:
         dtype = _numpy.double
     else:
-        dtype = _numpy.uint
+        dtype = _utility.lsampl
     array = _numpy.array(data, dtype=dtype)
     for i,d in enumerate(data):
         if to_physical:
