@@ -97,6 +97,7 @@ cdef class Channel (object):
         return ret
 
     def get_range(self, index):
+        "`Range` instance for the `index`\ed range."
         return self._get_range(index)
 
     def _find_range(self, unit, min, max):
