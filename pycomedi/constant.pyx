@@ -91,7 +91,7 @@ False
 >>> TRIG_SRC.now <= 2
 True
 >>> TRIG_SRC.now < 3
-False
+True
 >>> TRIG_SRC.now > None
 True
 
