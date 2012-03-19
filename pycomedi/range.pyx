@@ -46,10 +46,6 @@ cdef class Range (_BitwiseOperator):
     >>> r.unit
     <_NamedInt mA>
     """
-    # other data gets packed into the unit unsigned int (e.g RF_EXTERNAL)
-    _uint_all = 0xffffffffL
-    _unit_all = 0xff
-
     def __cinit__(self):
         self.value = -1
 
@@ -71,10 +67,9 @@ cdef class Range (_BitwiseOperator):
         return self.__str__()
 
     def _unit_get(self):
-        return _constant.UNIT.index_by_value(self.range.unit & self._unit_all)
+        return _constant.UNIT.index_by_value(self.range.unit)
     def _unit_set(self, value):
-        self.range.unit &= self._uint_all - self._unit_all
-        self.range.unit |= _constant.bitwise_value(value) & self._unit_all
+        self.range.unit = _constant.bitwise_value(value)
     unit = property(fget=_unit_get, fset=_unit_set)
 
     def _min_get(self):
