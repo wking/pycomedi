@@ -119,6 +119,15 @@ cdef class Channel (object):
         """
         return self.get_range(self._find_range(unit, min, max))
 
+    def ranges(self, **kwargs):
+        "Iterate through all available ranges."
+        ret = []
+        for i in range(self.get_n_ranges()):
+            #yield self.subdevice(i, **kwargs)
+            # Generators are not supported in Cython 0.14.1
+            ret.append(self.get_range(i, **kwargs))
+        return ret
+
 
 cdef class DigitalChannel (Channel):
     """Channel configured for reading or writing digital data.
