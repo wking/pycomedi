@@ -11,7 +11,6 @@ by on-board timers or external events.
 Based on David A. Schleef's `comedilib/demo/cmd.c`.
 """
 
-import logging as _logging
 import sys as _sys
 import time as _time
 
@@ -103,62 +102,24 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
 
 
 if __name__ == '__main__':
-    import argparse
+    import pycomedi_demo_args
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        '-f', '--filename', default='/dev/comedi0',
-        help='path to comedi device file')
-    parser.add_argument(
-        '-s', '--subdevice', type=int, help='subdevice for analog input')
-    parser.add_argument(
-        '-c', '--channel', type=int, action='append',
-        help='add a channel for analog input')
-    parser.add_argument(
-        '-a', '--analog-reference', dest='aref', default='ground',
-        choices=['diff', 'ground', 'other', 'common'],
-        help='reference for analog input')
-    parser.add_argument(
-        '-r', '--range', type=int, default=0, help='range for analog input')
-    parser.add_argument(
-        '-N', '--num-scans', type=int, default=10,
-        help='number of analog input scans')
-    parser.add_argument(
-        '-F', '--frequency', type=float, help='scan frequency in hertz')
-    parser.add_argument(
-        '-p', '--physical', default=False, action='store_const', const=True,
-        help='convert input to physical values before printing')
-    parser.add_argument(
-        '-v', '--verbose', default=0, action='count')
-
-    args = parser.parse_args()
-
-    if args.verbose >= 3:
-        _LOG.setLevel(_logging.DEBUG)
-    elif args.verbose >= 2:
-        _LOG.setLevel(_logging.INFO)
-    elif args.verbose >= 1:
-        _LOG.setLevel(_logging.WARN)
+    args = pycomedi_demo_args.parse_args(
+        description=__doc__,
+        argnames=['filename', 'subdevice', 'channels', 'aref', 'range', 'num-scans',
+                  'frequency', 'physical', 'verbose'])
 
     _LOG.info(('measuring device={0.filename} subdevice={0.subdevice} '
-               'channel={0.channel} range={0.range} analog reference={0.aref}'
+               'channels={0.channels} range={0.range} '
+               'analog-reference={0.aref}'
                ).format(args))
-
-    channel_indexes = args.channel
-    if not channel_indexes:
-        channel_indexes = [0]  # user gave no channels on the command line
-    aref = _constant.AREF.index_by_name(args.aref)
-    if args.frequency is None:
-        period = 0
-    else:
-        period = 1/args.frequency
 
     device = _Device(filename=args.filename)
     device.open()
     try:
         read(
-            device=device, subdevice=args.subdevice,
-            channels=channel_indexes, range=args.range, aref=aref,
-            period=period, num_scans=args.num_scans, physical=args.physical)
+            device=device, subdevice=args.subdevice, channels=args.channels,
+            range=args.range, aref=args.aref, period=args.period,
+            num_scans=args.num_scans, physical=args.physical)
     finally:
         device.close()

@@ -95,14 +95,9 @@ def display(device):
 
 
 if __name__ == '__main__':
-    import argparse
+    import pycomedi_demo_args
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        '-f', '--filename', default='/dev/comedi0',
-        help='path to comedi device file')
-
-    args = parser.parse_args()
+    args = pycomedi_demo_args.parse_args(description=__doc__, argnames=['filename'])
 
     device = _Device(filename=args.filename)
     device.open()
