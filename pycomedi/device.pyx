@@ -243,7 +243,7 @@ cdef class Device (object):
             ret = _comedilib_h.comedi_do_insnlist(self.device, &il)
         finally:
             _stdlib.free(il.insns)
-        if ret < 0:
+        if ret < len(insnlist):
             _error.raise_error(function_name='comedi_do_insnlist', ret=ret)
         return ret
 
