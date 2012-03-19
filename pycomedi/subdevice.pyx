@@ -156,6 +156,15 @@ cdef class Subdevice (object):
         insn.subdev = self.index
         return insn
 
+    def channels(self, **kwargs):
+        "Iterate through all available channels."
+        ret = []
+        for i in range(self.get_n_channels()):
+            #yield self.channel(i, **kwargs)
+            # Generators are not supported in Cython 0.14.1
+            ret.append(self.channel(i, **kwargs))
+        return ret
+
     def channel(self, index, factory=_Channel, **kwargs):
         "`Channel` instance for the `index`\ed channel."
         return factory(subdevice=self, index=index, **kwargs)
