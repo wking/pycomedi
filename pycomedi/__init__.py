@@ -25,9 +25,8 @@ __version__ = '0.4'
 LOG = _logging.getLogger('pycomedi')
 "Pycomedi logger"
 
-LOG.setLevel(_logging.DEBUG)
+LOG.setLevel(_logging.WARN)
 h = _logging.StreamHandler()
-h.setLevel(_logging.WARN)
 f = _logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 h.setFormatter(f)
 LOG.addHandler(h)
