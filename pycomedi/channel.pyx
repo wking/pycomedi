@@ -279,6 +279,8 @@ cdef class AnalogChannel (Channel):
         super(AnalogChannel, self).__init__(**kwargs)
         if range == None:
             range = self.get_range(0)
+        elif isinstance(range, int):
+            range = self.get_range(range)
         self.range = range
         if aref == None:
             flags = self.subdevice.get_flags()
