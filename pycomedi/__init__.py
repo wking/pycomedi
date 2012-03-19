@@ -36,4 +36,15 @@ del h, f
 
 class PyComediError (Exception):
     "Error in pycomedi"
-    pass
+    def __init__(self, function_name=None, ret=None, comedi_msg=None,
+                 error_msg=None):
+        self.function_name = function_name
+        self.ret = ret
+        self.comedi_msg = comedi_msg
+        self.error_msg = error_msg
+        if error_msg:
+            msg = '{} ({}): {} ({})'.format(
+                function_name, error_msg, comedi_msg, ret)
+        else:
+            msg = '{}: {} ({})'.format(function_name, comedi_msg, ret)
+        super(PyComediError, self).__init__(msg)

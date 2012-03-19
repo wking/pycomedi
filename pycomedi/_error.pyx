@@ -24,9 +24,10 @@ from pycomedi import PyComediError as _PyComediError
 cimport _comedilib_h
 
 
-def raise_error(function_name='', ret=None, error_msg=None):
+def raise_error(function_name=None, ret=None, error_msg=None):
     """Report an error while executing a comedilib function
 
+    >>> from pycomedi import PyComediError
     >>> raise_error(function_name='myfn', ret=-1)
     Traceback (most recent call last):
       ...
@@ -35,15 +36,19 @@ def raise_error(function_name='', ret=None, error_msg=None):
     Traceback (most recent call last):
       ...
     PyComediError: myfn (some error): Success (-1)
+    >>> try:
+    ...     raise_error(function_name='myfn', ret=-1)
+    ... except PyComediError, e:
+    ...     print(e.function_name)
+    ...     print(e.ret)
+    myfn
+    -1
     """
     errno = _comedilib_h.comedi_errno()
     comedi_msg = _comedilib_h.comedi_strerror(errno)
-    #_comedilib_h.comedi_perror(function_name)
-    if error_msg:
-        msg = '%s (%s): %s (%s)' % (function_name, error_msg, comedi_msg, ret)
-    else:
-        msg = '%s: %s (%s)' % (function_name, comedi_msg, ret)
-    raise _PyComediError(msg)
+    raise _PyComediError(
+        function_name=function_name, ret=ret, comedi_msg=comedi_msg,
+        error_msg=error_msg)
 
 
 def _comedi_getter(name, is_invalid):
