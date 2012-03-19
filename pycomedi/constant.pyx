@@ -95,6 +95,13 @@ True
 >>> TRIG_SRC.now > None
 True
 
+The ``UNIT`` constant treats ``RF_EXTERNAL`` as a full-fledged unit:
+
+>>> UNIT.index_by_name('external')
+<_NamedInt external>
+>>> UNIT.index_by_value(_comedi.RF_EXTERNAL)
+<_NamedInt external>
+
 .. [#ops] See `emulating numeric types`_ and `NotImplementedError` in
    `the standard type hierarchy`_.
 
@@ -442,6 +449,11 @@ SUPPORT_LEVEL = _Enum('support_level', 'COMEDI_', whitelist=[
 
 UNIT = _Enum('unit', 'UNIT_', translation={'mA':'mA'})
 # The mA translation avoids lowercasing to 'ma'.
+UNIT.append(_NamedInt(
+        name='external',
+        value=_comedi.RF_EXTERNAL, 
+        doc=('RF_EXTERNAL (value unit is defined by an external reference '
+             'channel)')))
 
 CALLBACK = _Enum('callback_flags', 'COMEDI_CB_', blacklist=['block', 'eobuf'])
 CALLBACK.eos.doc += ' (end of scan)'
