@@ -55,7 +55,10 @@ if __name__ == '__main__':
 
     device = _Device(filename=args.filename)
     device.open()
-    subdevice = device.find_subdevice_by_type(_constant.SUBDEVICE_TYPE.ai)
+    if args.subdevice is None:
+        subdevice = device.find_subdevice_by_type(_constant.SUBDEVICE_TYPE.ai)
+    else:
+        subdevice = device.subdevice(args.subdevice)
 
     insns = [subdevice.insn(), subdevice.insn(), subdevice.insn()]
     insns[0].insn = insns[2].insn = _constant.INSN.gtod
