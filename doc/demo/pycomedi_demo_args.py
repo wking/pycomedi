@@ -69,6 +69,12 @@ ARGUMENTS = {
          'action':'store_const',
          'const':True,
          'help':'convert input to physical values before printing'}),
+    'mmap':(
+        ['--mmap'],
+        {'default':False,
+         'action':'store_const',
+         'const':True,
+         'help':'use a memory-mapped reader rather than reading the input subdevice directly'}),
     'verbose':(
         ['-v', '--verbose'],
         {'action':_IncrementVerbosityAction}),
@@ -76,8 +82,10 @@ ARGUMENTS = {
 
 def parse_args(description, argnames):
     parser = _argparse.ArgumentParser(description=description)
-    for argument in ['filename', 'subdevice', 'channels', 'aref', 'range',
-                     'num-scans', 'frequency', 'physical', 'verbose']:
+    for argument in argnames:
         args,kwargs = ARGUMENTS[argument]
         parser.add_argument(*args, **kwargs)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if 'frequency' in argnames and not hasattr(args, 'period'):
+        args.period = 0
+    return args

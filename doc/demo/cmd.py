@@ -22,7 +22,7 @@ from pycomedi.device import Device as _Device
 from pycomedi.subdevice import StreamingSubdevice as _StreamingSubdevice
 from pycomedi.channel import AnalogChannel as _AnalogChannel
 from pycomedi.chanspec import ChanSpec as _ChanSpec
-from pycomedi.utility import Reader as _Reader
+import pycomedi.utility as _utility
 
 
 def open_channels(device, subdevice, channels, range, aref):
@@ -76,7 +76,7 @@ def print_data(channels, data, physical=False):
         print '\t'.join(str(x) for x in data[row,:])
 
 def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
-         num_scans=2, physical=False):
+         num_scans=2, reader=_utility.Reader, physical=False):
     """Read ``num_scans`` samples from each specified channel.
     """
     subdevice,channels = open_channels(
@@ -89,7 +89,7 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
     read_buffer = _numpy.zeros(
         (num_scans, len(channels)),
         dtype=subdevice.get_dtype())
-    reader = _Reader(subdevice, read_buffer)
+    reader = reader(subdevice=subdevice, buffer=read_buffer, name='Reader')
     start = _time.time()
     _LOG.info('start time: {}'.format(start))
     subdevice.command()
@@ -106,13 +106,18 @@ if __name__ == '__main__':
 
     args = pycomedi_demo_args.parse_args(
         description=__doc__,
-        argnames=['filename', 'subdevice', 'channels', 'aref', 'range', 'num-scans',
-                  'frequency', 'physical', 'verbose'])
+        argnames=['filename', 'subdevice', 'channels', 'aref', 'range',
+                  'num-scans', 'mmap', 'frequency', 'physical', 'verbose'])
 
     _LOG.info(('measuring device={0.filename} subdevice={0.subdevice} '
                'channels={0.channels} range={0.range} '
                'analog-reference={0.aref}'
                ).format(args))
+
+    if args.mmap:
+        reader = _utility.MMapReader
+    else:
+        reader = _utility.Reader
 
     device = _Device(filename=args.filename)
     device.open()
@@ -120,6 +125,6 @@ if __name__ == '__main__':
         read(
             device=device, subdevice=args.subdevice, channels=args.channels,
             range=args.range, aref=args.aref, period=args.period,
-            num_scans=args.num_scans, physical=args.physical)
+            num_scans=args.num_scans, reader=reader, physical=args.physical)
     finally:
         device.close()

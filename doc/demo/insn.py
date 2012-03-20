@@ -20,9 +20,10 @@ if __name__ == '__main__':
 
     args = pycomedi_demo_args.parse_args(
         description=__doc__,
-        argnames=['filename', 'subdevice', 'channel', 'aref', 'range', 'num-scans',
-                  'verbose'])
+        argnames=['filename', 'subdevice', 'channel', 'aref', 'range',
+                  'num-scans', 'verbose'])
 
+    print(args)
     _LOG.info(('measuring device={0.filename} subdevice={0.subdevice} '
                'channel={0.channel} range={0.range} analog reference={0.aref}'
                ).format(args))
