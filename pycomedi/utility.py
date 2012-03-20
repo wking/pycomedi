@@ -350,7 +350,7 @@ class _MMapReadWriteThread (_ReadWriteThread):
         return self.subdevice.get_buffer_size()
 
     def _fileno(self):
-        return self.subdevice._device.fileno()
+        return self.subdevice.device.fileno()
 
     def _action_bytes(self):
         return self.subdevice.get_buffer_contents()
