@@ -27,9 +27,9 @@ import pycomedi.utility as _utility
 
 def open_channels(device, subdevice, channels, range, aref):
     """Subdevice index and list of channel indexes
-      -> ``Subdevice`` instance and list of ``AnalogChannel`` instances
+    to ``Subdevice`` instance and list of ``AnalogChannel`` instances
     """
-    if args.subdevice >= 0:
+    if subdevice >= 0:
         subdevice = device.subdevice(subdevice, factory=_StreamingSubdevice)
     else:
         subdevice = device.find_subdevice_by_type(
@@ -64,8 +64,9 @@ def test_command(subdevice, num_tests=2):
         _LOG.info('test {} returned {}\n{}'.format(i, rc, subdevice.cmd))
     _LOG.error('error preparing command: {}'.format(rc))
     _sys.exit(1)
+test_command.__test__ = False  # test_command is not a Nose test
 
-def print_data(channels, data, physical=False):
+def write_data(stream, channels, data, physical=False):
     if physical:
         converters = [c.get_converter() for c in channels]
         physical_data = _numpy.zeros(data.shape, dtype=float32)
@@ -73,10 +74,12 @@ def print_data(channels, data, physical=False):
             physical_data[:,i] = c.to_physical(data[:,i])
         data = physical_data
     for row in range(data.shape[0]):
-        print '\t'.join(str(x) for x in data[row,:])
+        stream.write('\t'.join(str(x) for x in data[row,:]))
+        stream.write('\n')
 
 def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
-         num_scans=2, reader=_utility.Reader, physical=False):
+         num_scans=2, reader=_utility.Reader, physical=False,
+         stream=_sys.stdout):
     """Read ``num_scans`` samples from each specified channel.
     """
     subdevice,channels = open_channels(
@@ -98,7 +101,32 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
     stop = _time.time()
     _LOG.info('stop time: {}'.format(stop))
     _LOG.info('time: {}'.format(stop - start))
-    print_data(channels=channels, data=read_buffer, physical=physical)
+    write_data(
+        stream=stream, channels=channels, data=read_buffer, physical=physical)
+
+
+def run(filename, **kwargs):
+    """
+    >>> import StringIO
+    >>> stdout = StringIO.StringIO()
+    >>> run(filename='/dev/comedi0', stream=stdout)
+    >>> print(stdout.getvalue())  # doctest: +SKIP
+    29694
+    29693
+    <BLANKLINE>
+    >>> stdout.truncate(0)
+    >>> run(filename='/dev/comedi0', reader=_utility.MMapReader, stream=stdout)
+    >>> print(stdout.getvalue())  # doctest: +SKIP
+    29691
+    29691
+    <BLANKLINE>
+    """
+    device = _Device(filename=filename)
+    device.open()
+    try:
+        read(device=device, **kwargs)
+    finally:
+        device.close()
 
 
 if __name__ == '__main__':
@@ -119,12 +147,7 @@ if __name__ == '__main__':
     else:
         reader = _utility.Reader
 
-    device = _Device(filename=args.filename)
-    device.open()
-    try:
-        read(
-            device=device, subdevice=args.subdevice, channels=args.channels,
-            range=args.range, aref=args.aref, period=args.period,
-            num_scans=args.num_scans, reader=reader, physical=args.physical)
-    finally:
-        device.close()
+    run(filename=args.filename, subdevice=args.subdevice,
+        channels=args.channels, aref=args.aref, range=args.range,
+        num_scans=args.num_scans, reader=reader, period=args.period,
+        physical=args.physical)

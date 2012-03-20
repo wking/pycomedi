@@ -80,12 +80,19 @@ ARGUMENTS = {
         {'action':_IncrementVerbosityAction}),
     }
 
-def parse_args(description, argnames):
+def parse_args(description, argnames, args=None):
+    """
+    >>> args = parse_args(
+    ...     description='Parse a bunch of arguments',
+    ...     argnames=['frequency'], args=['--frequency', '2'])
+    >>> args.period
+    0.5
+    """
     parser = _argparse.ArgumentParser(description=description)
     for argument in argnames:
-        args,kwargs = ARGUMENTS[argument]
-        parser.add_argument(*args, **kwargs)
-    args = parser.parse_args()
+        args_,kwargs = ARGUMENTS[argument]
+        parser.add_argument(*args_, **kwargs)
+    args = parser.parse_args(args=args)
     if 'frequency' in argnames and not hasattr(args, 'period'):
         args.period = 0
     return args

@@ -9,3 +9,4 @@ ls pycomedi | grep '.pyx$'| while read file; do
   python -c "import doctest, sys; import pycomedi.$mod as m; r = doctest.testmod(m); print r; sys.exit(r.failed)"
 done
 nosetests --with-doctest --doctest-extension=.txt doc
+nosetests --with-doctest doc/demo/*.py

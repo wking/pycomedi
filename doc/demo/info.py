@@ -93,15 +93,37 @@ def display(device):
     for subdevice in device.subdevices():
         display_subdevice(subdevice=subdevice)
 
+def run(filename):
+    """
+    >>> run(filename='/dev/comedi0')  # doctest: +ELLIPSIS, +REPORT_UDIFF
+    overall info
+      comedi version: 0.7.76
+      driver name: ni_pcimio
+      board name: pci-6052e
+      number of subdevices: 14
+    subdevice 0:
+      type: ai
+      flags: cmd_read|readable|ground|common|diff|other|dither
+    ...
+    subdevice 13:
+      type: counter
+      flags: readable|writable
+      number of channels: 1
+      max data value: 15
+      ranges: <Range unit:none min:0.0 max:1.0>
+      command: (not supported)
+    """
+    device = _Device(filename=filename)
+    device.open()
+    try:
+        display(device)
+    finally:
+        device.close()
+
 
 if __name__ == '__main__':
     import pycomedi_demo_args
 
     args = pycomedi_demo_args.parse_args(description=__doc__, argnames=['filename'])
 
-    device = _Device(filename=args.filename)
-    device.open()
-    try:
-        display(device)
-    finally:
-        device.close()
+    run(filename=args.filename)
