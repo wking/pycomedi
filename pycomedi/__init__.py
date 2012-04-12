@@ -42,8 +42,8 @@ class PyComediError (Exception):
         self.comedi_msg = comedi_msg
         self.error_msg = error_msg
         if error_msg:
-            msg = '{} ({}): {} ({})'.format(
+            msg = '{0} ({1}): {2} ({3})'.format(
                 function_name, error_msg, comedi_msg, ret)
         else:
-            msg = '{}: {} ({})'.format(function_name, comedi_msg, ret)
+            msg = '{0}: {1} ({2})'.format(function_name, comedi_msg, ret)
         super(PyComediError, self).__init__(msg)
