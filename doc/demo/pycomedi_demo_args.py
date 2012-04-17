@@ -74,7 +74,8 @@ ARGUMENTS = {
         {'default':False,
          'action':'store_const',
          'const':True,
-         'help':'use a memory-mapped reader rather than reading the input subdevice directly'}),
+         'help':('use a memory-mapped reader/writer rather than '
+                 'reading/writing the input/output subdevice directly')}),
     'verbose':(
         ['-v', '--verbose'],
         {'action':_IncrementVerbosityAction}),
