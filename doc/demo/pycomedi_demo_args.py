@@ -39,7 +39,7 @@ ARGUMENTS = {
     'channels':(
         ['-c', '--channels'],
         {'type':lambda x: [int(i) for i in x.split(',')],
-         'default':0,
+         'default':[0],
          'help':'comma-separated channels for analog input/output'}),
     'aref':(
         ['-a', '--analog-reference'],
