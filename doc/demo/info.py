@@ -124,6 +124,8 @@ def run(filename):
 if __name__ == '__main__':
     import pycomedi_demo_args
 
-    args = pycomedi_demo_args.parse_args(description=__doc__, argnames=['filename'])
+    args = pycomedi_demo_args.parse_args(
+        description=__doc__,
+        argnames=['filename', 'verbose'])
 
     run(filename=args.filename)
