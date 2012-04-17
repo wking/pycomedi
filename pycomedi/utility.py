@@ -81,12 +81,14 @@ def _builtin_array(array):
 
 class _ReadWriteThread (_threading.Thread):
     "Base class for all reader/writer threads"
-    def __init__(self, subdevice, buffer, name=None):
+    def __init__(self, subdevice, buffer, name=None,
+                 block_while_running=False):
         if name == None:
             name = '<%s subdevice %d>' % (
                 self.__class__.__name__, subdevice.index)
         self.subdevice = subdevice
         self.buffer = buffer
+        self.block_while_running = block_while_running
         self._setup_buffer()
         super(_ReadWriteThread, self).__init__(name=name)
 
@@ -102,6 +104,11 @@ class _ReadWriteThread (_threading.Thread):
         when the backing `Device` instance is closed.
         """
         return self.subdevice.device.file
+
+    def block(self):
+        while self.subdevice.get_flags().running:
+            _time.sleep(0)
+        self.subdevice.cancel()  # become unbusy
 
 
 class Reader (_ReadWriteThread):
@@ -180,12 +187,8 @@ class Reader (_ReadWriteThread):
                 shape=self.buffer.shape, dtype=self.buffer.dtype,
                 buffer=buf)
             self.buffer[:] = a
-        #_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
-        #while self.subdevice.get_flags().running:
-            ##_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
-        #    _time.sleep(0)
-        #_LOG.critical('ai running? %s' % self.subdevice.get_flags().running)
-        #_time.sleep(1)
+        if self.block_while_running:
+            self.block()
 
 
 class Writer (_ReadWriteThread):
@@ -266,12 +269,8 @@ class Writer (_ReadWriteThread):
         f = self._file()
         remaining_buffer.tofile(f)
         f.flush()
-        #_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
-        #while self.subdevice.get_flags().running:
-            ##_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
-            #_time.sleep(0)
-        #_LOG.critical('ao running? %s' % self.subdevice.get_flags().running)
-        #_time.sleep(1)
+        if self.block_while_running:
+            self.block()
 
 
 class _MMapReadWriteThread (_ReadWriteThread):
@@ -325,6 +324,8 @@ class _MMapReadWriteThread (_ReadWriteThread):
                 remaining -= action
             else:
                 _time.sleep(sleep_time)
+        if self.block_while_running:
+            self.block()
 
     def _act(self, mmap, mmap_offset, buffer_offset, remaining, mmap_size,
              action_bytes=None, builtin_array=None):
