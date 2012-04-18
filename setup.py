@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2012 W. Trevor King <wking@drexel.edu>
+# Copyright (C) 2008-2012 W. Trevor King <wking@tremily.us>
 #
 # This file is part of pycomedi.
 #
@@ -57,7 +57,7 @@ for filename in sorted(os.listdir(package_name)):
 setup(name=package_name,
       version=__version__,
       maintainer='W. Trevor King',
-      maintainer_email='wking@drexel.edu',
+      maintainer_email='wking@tremily.us',
       url='http://blog.tremily.us/posts/{}/'.format(package_name),
       download_url='http://git.tremily.us/?p={}.git;a=snapshot;h={};sf=tgz'.format(
         package_name, __version__),
