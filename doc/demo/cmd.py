@@ -91,6 +91,19 @@ def write_data(stream, channels, data, physical=False):
         stream.write('\t'.join(str(x) for x in data[row,:]))
         stream.write('\n')
 
+class DataWriter (object):
+    def __init__(self, stream, channels, physical=False):
+        self.stream = stream
+        self.channels = channels
+        self.physical = physical
+
+    def __call__(self, data):
+        d = _numpy.ndarray(shape=(1,data.size), dtype=data.dtype, buffer=data)
+        write_data(
+            stream=self.stream, channels=self.channels, data=d,
+            physical=self.physical)
+
+
 def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
          num_scans=2, reader=_utility.Reader, physical=False,
          stream=_sys.stdout):
@@ -103,10 +116,19 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
         subdevice=subdevice, channels=channels, period=period,
         num_scans=num_scans)
     rc = test_command(subdevice=subdevice)
-    read_buffer = _numpy.zeros(
-        (num_scans, len(channels)),
-        dtype=subdevice.get_dtype())
-    reader = reader(subdevice=subdevice, buffer=read_buffer, name='Reader')
+    kwargs = {}
+    if reader == _utility.CallbackReader:
+        read_buffer_shape = (len(channels),)
+        kwargs = {
+            'callback': DataWriter(
+                stream=stream, channels=channels, physical=physical),
+            'count': num_scans,
+            }
+    else:
+        read_buffer_shape = (num_scans, len(channels))
+    read_buffer = _numpy.zeros(read_buffer_shape, dtype=subdevice.get_dtype())
+    reader = reader(
+        subdevice=subdevice, buffer=read_buffer, name='Reader', **kwargs)
     start = _time.time()
     _LOG.info('start time: {}'.format(start))
     subdevice.command()
@@ -115,8 +137,10 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
     stop = _time.time()
     _LOG.info('stop time: {}'.format(stop))
     _LOG.info('time: {}'.format(stop - start))
-    write_data(
-        stream=stream, channels=channels, data=read_buffer, physical=physical)
+    if not isinstance(reader, _utility.CallbackReader):
+        write_data(
+            stream=stream, channels=channels, data=read_buffer,
+            physical=physical)
 
 
 def run(filename, **kwargs):
@@ -149,14 +173,17 @@ if __name__ == '__main__':
     args = pycomedi_demo_args.parse_args(
         description=__doc__,
         argnames=['filename', 'subdevice', 'channels', 'aref', 'range',
-                  'num-scans', 'mmap', 'frequency', 'physical', 'verbose'])
+                  'num-scans', 'mmap', 'callback', 'frequency', 'physical',
+                  'verbose'])
 
     _LOG.info(('measuring device={0.filename} subdevice={0.subdevice} '
                'channels={0.channels} range={0.range} '
                'analog-reference={0.aref}'
                ).format(args))
 
-    if args.mmap:
+    if args.callback:
+        reader = _utility.CallbackReader
+    elif args.mmap:
         reader = _utility.MMapReader
     else:
         reader = _utility.Reader

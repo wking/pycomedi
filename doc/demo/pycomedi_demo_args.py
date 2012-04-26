@@ -90,6 +90,13 @@ ARGUMENTS = {
          'const':True,
          'help':('use a memory-mapped reader/writer rather than '
                  'reading/writing the input/output subdevice directly')}),
+    'callback':(
+        ['--callback'],
+        {'default':False,
+         'action':'store_const',
+         'const':True,
+         'help':('use a callback reader/writer rather than '
+                 'reading/writing the input/output subdevice directly')}),
     'verbose':(
         ['-v', '--verbose'],
         {'action':_IncrementVerbosityAction,
