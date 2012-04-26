@@ -83,7 +83,7 @@ test_command.__test__ = False  # test_command is not a Nose test
 def write_data(stream, channels, data, physical=False):
     if physical:
         converters = [c.get_converter() for c in channels]
-        physical_data = _numpy.zeros(data.shape, dtype=float32)
+        physical_data = _numpy.zeros(data.shape, dtype=_numpy.float32)
         for i,c in enumerate(converters):
             physical_data[:,i] = c.to_physical(data[:,i])
         data = physical_data
