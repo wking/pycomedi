@@ -60,7 +60,7 @@ def prepare_command(subdevice, channels, period, num_scans):
     the parts we want.
     """
     command = subdevice.get_cmd_generic_timed(
-        len(channels), scan_period_ns=period)
+        len(channels), scan_period_ns=period*1e9)
     command.chanlist = channels
     command.stop_src = _constant.TRIG_SRC.count
     command.stop_arg = num_scans
