@@ -92,7 +92,8 @@ ARGUMENTS = {
                  'reading/writing the input/output subdevice directly')}),
     'verbose':(
         ['-v', '--verbose'],
-        {'action':_IncrementVerbosityAction}),
+        {'action':_IncrementVerbosityAction,
+         'nargs':0}),
     }
 
 def parse_args(description, argnames, args=None):
