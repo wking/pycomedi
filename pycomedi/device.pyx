@@ -272,15 +272,15 @@ cdef class Device (object):
             _error.raise_error(
                 function_name='comedi_get_default_calibration_path')
         return ret
-     
+
     def parse_calibration(self, path=None):
         """The soft calibration from a file for this device.
-        
+
         If path is None, the default calibration file is used.
         """
         if path is None:
             path = self.get_default_calibration_path()
-        
+
         ret = _comedilib_h.comedi_parse_calibration_file(path)
         if ret == NULL:
             _error.raise_error(
