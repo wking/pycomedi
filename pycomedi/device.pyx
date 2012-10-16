@@ -24,6 +24,7 @@ from pycomedi import PyComediError as _PyComediError
 cimport _comedi_h
 cimport _comedilib_h
 import _error
+from calibration import Calibration as _Calibration
 from instruction cimport Insn as _Insn
 from instruction import Insn as _Insn
 from subdevice import Subdevice as _Subdevice
@@ -280,12 +281,9 @@ cdef class Device (object):
         """
         if path is None:
             path = self.get_default_calibration_path()
-
-        ret = _comedilib_h.comedi_parse_calibration_file(path)
-        if ret == NULL:
-            _error.raise_error(
-                function_name='comedi_parse_calibration_file')
-        return ret
+        c = _Calibration(device=self)
+        c.from_file(path)
+        return c
 
     # extensions to make a more idomatic Python interface
 
