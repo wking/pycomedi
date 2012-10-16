@@ -29,7 +29,7 @@ import constant as _constant
 cdef class Command (object):
     """A Comedi command
 
-    >>> from .constant import AREF, CMDF, TRIG_SRC    
+    >>> from .constant import AREF, CMDF, TRIG_SRC
     >>> from .channel import AnalogChannel
     >>> from .chanspec import ChanSpec
     >>> from .device import Device

@@ -259,7 +259,7 @@ cdef class StreamingSubdevice (Subdevice):
         of the subdevice's supported trigger sources.  Other elements
         in the structure are undefined.
         """
-        cdef _command.Command cmd        
+        cdef _command.Command cmd
         cmd = _command.Command()
         ret = _comedilib_h.comedi_get_cmd_src_mask(
             self.device.device, self.index, cmd.get_comedi_cmd_pointer())
@@ -284,7 +284,7 @@ cdef class StreamingSubdevice (Subdevice):
         Note that the `ChanSpec` instances in `cmd.chanlist` are not
         initialized to reasonable values.
         """
-        cdef _command.Command cmd        
+        cdef _command.Command cmd
         cmd = _command.Command()
         ret = _comedilib_h.comedi_get_cmd_generic_timed(
             self.device.device, self.index, cmd.get_comedi_cmd_pointer(),

@@ -451,7 +451,7 @@ UNIT = _Enum('unit', 'UNIT_', translation={'mA':'mA'})
 # The mA translation avoids lowercasing to 'ma'.
 UNIT.append(_NamedInt(
         name='external',
-        value=_comedi.RF_EXTERNAL, 
+        value=_comedi.RF_EXTERNAL,
         doc=('RF_EXTERNAL (value unit is defined by an external reference '
              'channel)')))
 
