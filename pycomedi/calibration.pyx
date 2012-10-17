@@ -425,6 +425,28 @@ cdef class CalibrationSetting (object):
         from physical coefficients: [ 0.]
         from physical origin: 0.0
 
+    Test setting various attributes.
+
+    >>> s = c.settings[-1]
+    >>> s.channels = [0, 1, 2]
+    >>> s.channels
+    array([0, 1, 2])
+    >>> s.ranges = [0, 1]
+    >>> s.ranges
+    array([0, 1])
+    >>> s.arefs = [0]
+    >>> s.arefs
+    array([0])
+    >>> caldacs = []
+    >>> for i in range(3):
+    ...     caldac = Caldac()
+    ...     caldac.allocate()
+    ...     caldac.subdevice = i
+    ...     caldac.channel = 2*i
+    ...     caldac.value = 3*i
+    ...     caldacs.append(caldac)
+    >>> s.caldacs = caldacs
+
     >>> d.close()
     """
     def __cinit__(self):
