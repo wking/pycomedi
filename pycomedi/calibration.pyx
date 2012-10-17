@@ -545,6 +545,8 @@ cdef class CalibrationSetting (object):
             c.caldac = &self.setting.caldacs[i]
             ret.append(c)
         return ret
+    cdef _caldacs_set_single(self, index, Caldac caldac):
+        self.setting.caldacs[index] = caldac.caldac[0]
     def _caldacs_set(self, value):
         assert self.setting is not NULL, 'load setting first'
         if self.setting.caldacs is not NULL:
@@ -559,7 +561,7 @@ cdef class CalibrationSetting (object):
         for i,x in enumerate(value):
             if i >= length:
                 raise ValueError((i, length))
-            self.setting.caldacs[i] = x
+            self._caldacs_set_single(i, x)
     caldacs = property(fget=_caldacs_get, fset=_caldacs_set)
 
     def _soft_calibration_get(self):

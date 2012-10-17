@@ -42,6 +42,7 @@ cdef class CalibrationSetting (object):
     cdef _comedilib_h.comedi_calibration_setting_t *setting
     cdef public _Subdevice subdevice
 
+    cdef _caldacs_set_single(self, index, Caldac caldac)
     cpdef _soft_calibration_set(self, CalibratedConverter value)
 
 
