@@ -1,4 +1,5 @@
 # Copyright (C) 2011-2012 W. Trevor King <wking@tremily.us>
+#                         Éric Piel <piel@delmic.com>
 #
 # This file is part of pycomedi.
 #
