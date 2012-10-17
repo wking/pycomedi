@@ -316,11 +316,11 @@ cdef class CalibrationSetting (object):
 
     >>> c = d.parse_calibration()
     >>> s = c.settings[0]
-
     >>> print(s)
     <CalibrationSetting device:/dev/comedi0 subdevice:0>
     >>> print(s.subdevice)  # doctest: +ELLIPSIS
     <pycomedi.subdevice.Subdevice object at 0x...>
+
     >>> for s in c.settings:
     ...     print('{} {}'.format(s.subdevice.index, s.subdevice.get_type()))
     ...     print('  channels: {}'.format(s.channels))
