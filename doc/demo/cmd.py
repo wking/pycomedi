@@ -93,17 +93,25 @@ def write_data(stream, channels, data, physical=False):
     stream.flush()
 
 class DataWriter (object):
-    def __init__(self, stream, channels, physical=False):
+    def __init__(self, stream, subdevice, channels, physical=False):
         self.stream = stream
+        self.subdevice = subdevice
         self.channels = channels
         self.physical = physical
+        _LOG.debug('data writer initialized')
+        _LOG.debug('poll: {}'.format(self.subdevice.poll()))
+        _LOG.debug('get_buffer contents: {}'.format(
+                self.subdevice.get_buffer_contents()))
 
     def __call__(self, data):
+        _LOG.debug('new data: {}'.format(data))
         d = _numpy.ndarray(shape=(1,data.size), dtype=data.dtype, buffer=data)
         write_data(
             stream=self.stream, channels=self.channels, data=d,
             physical=self.physical)
-
+        _LOG.debug('poll: {}'.format(self.subdevice.poll()))
+        _LOG.debug('get_buffer contents: {}'.format(
+                self.subdevice.get_buffer_contents()))
 
 def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
          num_scans=2, reader=_utility.Reader, physical=False,
@@ -122,7 +130,8 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
         read_buffer_shape = (len(channels),)
         kwargs = {
             'callback': DataWriter(
-                stream=stream, channels=channels, physical=physical),
+                stream=stream, subdevice=subdevice, channels=channels,
+                physical=physical),
             'count': num_scans,
             }
     else:
@@ -134,10 +143,27 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
     _LOG.info('start time: {}'.format(start))
     subdevice.command()
     reader.start()
-    reader.join()
+    while subdevice.get_flags().running:
+        _LOG.debug('running...')
+        _LOG.debug('poll: {}'.format(subdevice.poll()))
+        _LOG.debug('get_buffer offset: {}'.format(
+                subdevice.get_buffer_offset()))
+        _LOG.debug('get_buffer contents: {}'.format(
+                subdevice.get_buffer_contents()))
+        _time.sleep(0.5)
+    _LOG.debug('stopped running.  joining reader...')
     stop = _time.time()
     _LOG.info('stop time: {}'.format(stop))
-    _LOG.info('time: {}'.format(stop - start))
+    reader.join()
+    join = _time.time()
+    _LOG.info('join time: {}'.format(join))
+    _LOG.debug('poll: {}'.format(subdevice.poll()))
+    _LOG.debug('get_buffer offset: {}'.format(
+            subdevice.get_buffer_offset()))
+    _LOG.debug('get_buffer contents: {}'.format(
+            subdevice.get_buffer_contents()))
+    _LOG.info('stop delay: {}'.format(stop - start))
+    _LOG.info('join delay: {}'.format(join - stop))
     if not isinstance(reader, _utility.CallbackReader):
         write_data(
             stream=stream, channels=channels, data=read_buffer,
