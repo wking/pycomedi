@@ -433,10 +433,10 @@ cdef class AnalogChannel (Channel):
             if calibration is None:
                 calibration = self.subdevice.device.parse_calibration()
             to_physical = self.get_softcal_converter(
-	            _constant.CONVERSION_DIRECTION.to_physical,
+                _constant.CONVERSION_DIRECTION.to_physical,
                 calibration)
             from_physical = self.get_softcal_converter(
-	            _constant.CONVERSION_DIRECTION.from_physical,
+                _constant.CONVERSION_DIRECTION.from_physical,
                 calibration)
         else:
             to_physical = self.get_hardcal_converter(
