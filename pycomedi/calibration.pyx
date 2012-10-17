@@ -234,9 +234,32 @@ cdef class Caldac (object):
     <Caldac subdevice:5 channel:4 value:255>
 
     >>> d.close()
+
+    You can also allocate `Caldac` instances on your own.  The
+    allocated memory will be automatically freed when the instance is
+    garbage collected.
+
+    >>> caldac = Caldac()
+    >>> caldac.subdevice == None
+    True
+    >>> caldac.subdevice = 1
+    Traceback (most recent call last):
+      ...
+    AssertionError: load caldac first
+    >>> caldac.allocate()
+    >>> caldac.subdevice
+    0L
+    >>> caldac.subdevice = 1
     """
     def __cinit__(self):
         self.caldac = NULL
+        self._local = False
+
+    def __dealloc__(self):
+        if self.caldac is not NULL and self._local:
+            _stdlib.free(self.caldac)
+            self.caldac = NULL
+            self._local = False
 
     def __str__(self):
         fields = ['{}:{}'.format(f, getattr(self, f))
@@ -245,6 +268,17 @@ cdef class Caldac (object):
 
     def __repr__(self):
         return self.__str__()
+
+    def allocate(self):
+        assert not self._local, 'already allocated'
+        self.caldac = <_comedilib_h.comedi_caldac_t *> _stdlib.malloc(
+            sizeof(_comedilib_h.comedi_caldac_t *))
+        if self.caldac is NULL:
+            raise MemoryError()
+        self._local = True
+        self.subdevice = 0
+        self.channel = 0
+        self.value = 0
 
     def _subdevice_get(self):
         if self.caldac is not NULL:

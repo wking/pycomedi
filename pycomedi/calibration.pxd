@@ -35,6 +35,7 @@ cdef class CalibratedConverter (object):
 
 cdef class Caldac (object):
     cdef _comedilib_h.comedi_caldac_t *caldac
+    cdef bint _local
 
 
 cdef class CalibrationSetting (object):
