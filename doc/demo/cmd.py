@@ -28,6 +28,13 @@ Based on David A. Schleef's `comedilib/demo/cmd.c`.
 import sys as _sys
 import time as _time
 
+try:
+    from matplotlib import pyplot as _pyplot
+    from matplotlib.lines import Line2D as _Line2D
+    #from matplotlib.animation import FuncAnimation as _FuncAnimation
+except ImportError as e:
+    _pyplot = None
+    _matplotlib_import_error = e
 import numpy as _numpy
 
 from pycomedi import LOG as _LOG
@@ -93,11 +100,32 @@ def write_data(stream, channels, data, physical=False):
     stream.flush()
 
 class DataWriter (object):
-    def __init__(self, stream, subdevice, channels, physical=False):
+    def __init__(self, stream, subdevice, channels, physical=False,
+                 plot=False):
         self.stream = stream
         self.subdevice = subdevice
         self.channels = channels
         self.physical = physical
+        self.plot = plot
+        if plot:
+            if _pyplot is None:
+                raise _matplotlib_import_error
+            self.figure = _pyplot.figure()
+            self.axes = self.figure.add_subplot(1, 1, 1)
+            self.n = 100
+            self.index = 0
+            self.tdata = _numpy.arange(self.n)
+            self.ydata = _numpy.zeros(
+                (2*self.n, len(channels)), dtype=_numpy.float32)
+            self.lines = []
+            for i,channel in enumerate(channels):
+                self.lines.append(_Line2D(
+                        self.tdata, self.ydata[:self.n,i],
+                        linestyle='', color='red', marker='.'))
+                self.axes.add_line(self.lines[-1])
+            self.axes.set_xlim(0, self.n-1)
+            self.axes.set_ylim(0, max(c.get_maxdata() for c in channels))
+            _pyplot.draw()
         _LOG.debug('data writer initialized')
         _LOG.debug('poll: {}'.format(self.subdevice.poll()))
         _LOG.debug('get_buffer contents: {}'.format(
@@ -106,6 +134,15 @@ class DataWriter (object):
     def __call__(self, data):
         _LOG.debug('new data: {}'.format(data))
         d = _numpy.ndarray(shape=(1,data.size), dtype=data.dtype, buffer=data)
+        if self.plot:
+            self.ydata[self.index,:] = d
+            self.ydata[self.index + self.n,:] = d
+            for i,line in enumerate(self.lines):
+                line.set_data(
+                    self.tdata,
+                    self.ydata[self.index+1:self.index + self.n+1,i])
+            _pyplot.draw()
+            self.index = (self.index + 1) % len(self.tdata)
         write_data(
             stream=self.stream, channels=self.channels, data=d,
             physical=self.physical)
@@ -114,7 +151,7 @@ class DataWriter (object):
                 self.subdevice.get_buffer_contents()))
 
 def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
-         num_scans=2, reader=_utility.Reader, physical=False,
+         num_scans=2, reader=_utility.Reader, physical=False, plot=False,
          stream=_sys.stdout):
     """Read ``num_scans`` samples from each specified channel.
     """
@@ -131,7 +168,7 @@ def read(device, subdevice=None, channels=[0], range=0, aref=0, period=0,
         kwargs = {
             'callback': DataWriter(
                 stream=stream, subdevice=subdevice, channels=channels,
-                physical=physical),
+                physical=physical, plot=plot),
             'count': num_scans,
             }
     else:
@@ -201,7 +238,7 @@ if __name__ == '__main__':
         description=__doc__,
         argnames=['filename', 'subdevice', 'channels', 'aref', 'range',
                   'num-scans', 'mmap', 'callback', 'frequency', 'physical',
-                  'verbose'])
+                  'plot', 'verbose'])
 
     _LOG.info(('measuring device={0.filename} subdevice={0.subdevice} '
                'channels={0.channels} range={0.range} '
@@ -215,7 +252,11 @@ if __name__ == '__main__':
     else:
         reader = _utility.Reader
 
+    if args.plot:
+        if _pyplot is None:
+            raise _matplotlib_import_error
+        _pyplot.ion()
     run(filename=args.filename, subdevice=args.subdevice,
         channels=args.channels, aref=args.aref, range=args.range,
         num_scans=args.num_scans, reader=reader, period=args.period,
-        physical=args.physical)
+        physical=args.physical, plot=args.plot)

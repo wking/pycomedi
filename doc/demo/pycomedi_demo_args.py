@@ -98,6 +98,12 @@ ARGUMENTS = {
          'const':True,
          'help':('use a callback reader/writer rather than '
                  'reading/writing the input/output subdevice directly')}),
+    'plot':(
+        ['--plot'],
+        {'default':False,
+         'action':'store_const',
+         'const':True,
+         'help':'plot data as it comes in'}),
     'verbose':(
         ['-v', '--verbose'],
         {'action':_IncrementVerbosityAction,
