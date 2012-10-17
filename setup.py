@@ -28,17 +28,6 @@ from pycomedi import __version__
 
 
 package_name = 'pycomedi'
-classifiers = """\
-Development Status :: 2 - Pre-Alpha
-Intended Audience :: Developers
-Intended Audience :: Science/Research
-Operating System :: POSIX
-Operating System :: Unix
-License :: OSI Approved :: GNU General Public License (GPL)
-Programming Language :: Python
-Topic :: Scientific/Engineering
-Topic :: Software Development :: Libraries :: Python Modules
-"""
 
 _this_dir = os.path.dirname(__file__)
 
@@ -65,7 +54,21 @@ setup(name=package_name,
       platforms=['all'],
       description=__doc__,
       long_description=open(os.path.join(_this_dir, 'README'), 'r').read(),
-      classifiers=filter(None, classifiers.split('\n')),
+      classifiers=[
+          'Development Status :: 2 - Pre-Alpha',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Science/Research',
+          'Operating System :: POSIX',
+          'Operating System :: Unix',
+          'License :: OSI Approved :: GNU General Public License (GPL)',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.2',
+          'Topic :: Scientific/Engineering',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+          ],
       packages=[package_name],
       provides=[package_name],
       cmdclass = {'build_ext': build_ext},
