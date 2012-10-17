@@ -90,6 +90,7 @@ def write_data(stream, channels, data, physical=False):
     for row in range(data.shape[0]):
         stream.write('\t'.join(str(x) for x in data[row,:]))
         stream.write('\n')
+    stream.flush()
 
 class DataWriter (object):
     def __init__(self, stream, channels, physical=False):
