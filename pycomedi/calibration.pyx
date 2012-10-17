@@ -530,6 +530,7 @@ cdef class CalibrationSetting (object):
             self.setting.arefs[i] = x
         for i in range(length, _comedilib_h.CS_MAX_AREFS_LENGTH):
             self.setting.arefs[i] = 0
+        self.setting.num_arefs = length
     arefs = property(fget=_arefs_get, fset=_arefs_set)
 
     def _caldacs_get(self):
