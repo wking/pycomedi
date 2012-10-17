@@ -70,9 +70,18 @@ See the examples in the `doc` directory.
 Testing
 =======
 
-Integration tests with::
+Run integration tests with::
 
     $ nosetests --with-doctest --doctest-extension=txt doc
+
+The analog integration tests read from analog input channels 0 through
+3, and write to analog output channels 0 and 1, so you'll need a board
+with that many channels.  You should also make sure that the analog
+output channels aren't plugged into anything sensetive, since the
+tests sweep their output around over a reasonable chunk of the channel
+range.  Some of the internal unit tests also write, so it's safest to
+just disconnect all digital lines and analog outputs before running
+the tests.
 
 Run both integration tests and internal unit tests with::
 
