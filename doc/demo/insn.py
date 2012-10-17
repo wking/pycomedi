@@ -67,7 +67,7 @@ def run(filename, subdevice, channel, range, aref, num_scans):
     t1 = insns[0].data[0] + insns[1].data[1]/1e6
     t2 = insns[2].data[0] + insns[2].data[1]/1e6
     return (t1, insns[1].data, t2)
-    
+
 def display(t1, data, t2):
     _LOG.info('initial time: {}'.format(t1))
     _LOG.info('final time:   {}'.format(t2))

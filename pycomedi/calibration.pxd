@@ -17,6 +17,8 @@
 "Expose `CalibratedConverter` internals at the C level for other Cython modules"
 
 cimport _comedilib_h
+from device cimport Device as _Device
+from subdevice cimport Subdevice as _Subdevice
 
 
 cdef class CalibratedConverter (object):
@@ -29,3 +31,21 @@ cdef class CalibratedConverter (object):
     cpdef get_to_physical_coefficients(self)
     cpdef get_from_physical_expansion_origin(self)
     cpdef get_from_physical_coefficients(self)
+
+
+cdef class Caldac (object):
+    cdef _comedilib_h.comedi_caldac_t *caldac
+
+
+cdef class CalibrationSetting (object):
+    cdef _comedilib_h.comedi_calibration_setting_t *setting
+    cdef public _Subdevice subdevice
+
+    cpdef _soft_calibration_set(self, CalibratedConverter value)
+
+
+cdef class Calibration (object):
+    cdef _comedilib_h.comedi_calibration_t *calibration
+    cdef public _Device device
+
+    cpdef from_file(self, path)
