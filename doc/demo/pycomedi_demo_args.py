@@ -33,6 +33,7 @@ class _IncrementVerbosityAction (_argparse.Action):
         level -= 10  # e.g. logging.INFO -> logging.DEBUG
         if level >= _logging.DEBUG:
             _LOG.setLevel(level)
+        # otherwise we're already at DEBUG, so don't do anything
 
 
 # name -> (args, kwargs)
