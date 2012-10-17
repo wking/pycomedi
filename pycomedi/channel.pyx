@@ -23,6 +23,7 @@ import numpy as _numpy
 cimport _comedi_h
 cimport _comedilib_h
 from calibration cimport CalibratedConverter as _CalibratedConverter
+from calibration cimport Calibration as _Calibration
 from range cimport Range as _Range
 from subdevice cimport Subdevice as _Subdevice
 
@@ -226,6 +227,15 @@ cdef class AnalogChannel (Channel):
     <Range unit:volt min:-10.0 max:10.0>
     >>> c.aref
     <_NamedInt ground>
+
+    You can calibrate the channel with the default channel calibration.
+
+    >>> c.apply_calibration()
+
+    Or you can use a parsed (and possibly altered) calibration.
+
+    >>> calibration = d.parse_calibration()
+    >>> c.apply_calibration(calibration=calibration)
 
     >>> data = c.data_read()
     >>> data  # doctest: +SKIP
@@ -440,3 +450,47 @@ cdef class AnalogChannel (Channel):
 
     def get_converter(self, calibration=None):
         return self._get_converter(calibration)
+
+    cdef _apply_calibration(self, char *path):
+        if path is NULL:
+            p = self.subdevice.device.get_default_calibration_path()
+            # automatically get a char * refernce into the Python string p
+            path = p
+        ret = _comedilib_h.comedi_apply_calibration(
+            self.subdevice.device.device,
+            self.subdevice.index, self.index,
+            _constant.bitwise_value(self.range),
+            _constant.bitwise_value(self.aref),
+            path)
+        if ret < 0:
+            _error.raise_error(
+                function_name='comedi_apply_calibration', ret=ret)
+        return ret
+
+    cdef _apply_parsed_calibration(self, _Calibration calibration):
+        ret = _comedilib_h.comedi_apply_parsed_calibration(
+            self.subdevice.device.device,
+            self.subdevice.index, self.index,
+            _constant.bitwise_value(self.range),
+            _constant.bitwise_value(self.aref),
+            calibration.calibration)
+        if ret < 0:
+            _error.raise_error(
+                function_name='comedi_apply_parsed_calibration', ret=ret)
+        return ret
+
+    def apply_calibration(self, calibration=None, path=None):
+        """Apply a calibration to this channel configuration
+
+        `calibration` may None or a `Calibration` instance.  If it is
+        a `Calibration` instance, that instance is used for the
+        calibration.  Otherwise we look at `path`.  If `path` is None,
+        we use the default device calibration, otherwise we try and
+        use the calibration file located at `path`.
+        """
+        if calibration is not None:
+            self._apply_parsed_calibration(calibration)
+        elif path is not None:
+            self._apply_calibration(path)
+        else:
+            self._apply_calibration(NULL)
