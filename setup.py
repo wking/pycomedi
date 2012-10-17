@@ -37,7 +37,7 @@ for filename in sorted(os.listdir(package_name)):
     if extension == '.pyx':
         ext_modules.append(
             Extension(
-                '%s.%s' % (package_name, basename),
+                '{}.{}'.format(package_name, basename),
                 [os.path.join(package_name, filename)],
                 libraries=['comedi'],
                 include_dirs=[numpy.get_include()],
