@@ -394,7 +394,7 @@ cdef class AnalogChannel (Channel):
 
 
     cdef _comedilib_h.comedi_polynomial_t get_softcal_converter(
-        self, direction, calibration):
+        self, direction, _Calibration calibration):
         """
 
         `direction` should be a value from `constant.CONVERSION_DIRECTION`.
@@ -404,7 +404,7 @@ cdef class AnalogChannel (Channel):
             self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(direction),
-            <_comedilib_h.comedi_calibration_t*> calibration, &poly)
+            calibration.calibration, &poly)
         if rc < 0:
             _error.raise_error(function_name='comedi_get_softcal_converter',
                                ret=rc)
@@ -427,7 +427,7 @@ cdef class AnalogChannel (Channel):
                                ret=rc)
         return poly
 
-    cdef _get_converter(self, calibration):
+    cdef _get_converter(self, _Calibration calibration):
         cdef _comedilib_h.comedi_polynomial_t to_physical, from_physical
         cdef _CalibratedConverter ret
         flags = self.subdevice.get_flags()
@@ -481,7 +481,7 @@ cdef class AnalogChannel (Channel):
                 function_name='comedi_apply_parsed_calibration', ret=ret)
         return ret
 
-    def apply_calibration(self, calibration=None, path=None):
+    def apply_calibration(self, _Calibration calibration=None, path=None):
         """Apply a calibration to this channel configuration
 
         `calibration` may None or a `Calibration` instance.  If it is
