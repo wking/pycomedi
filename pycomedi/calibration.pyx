@@ -673,7 +673,7 @@ cdef class Calibration (object):
             return None
         ret = []
         for i in range(self.calibration.num_settings):
-            s = CalibrationSetting(
+            s = <CalibrationSetting> CalibrationSetting(
                 subdevice=self.device.subdevice(
                     index=self.calibration.settings[i].subdevice))
             s.setting = &self.calibration.settings[i]
