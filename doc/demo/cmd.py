@@ -32,7 +32,7 @@ try:
     from matplotlib import pyplot as _pyplot
     from matplotlib.lines import Line2D as _Line2D
     #from matplotlib.animation import FuncAnimation as _FuncAnimation
-except ImportError as e:
+except (ImportError, RuntimeError) as e:
     _pyplot = None
     _matplotlib_import_error = e
 import numpy as _numpy
