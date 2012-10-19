@@ -27,7 +27,6 @@ cimport _comedilib_h
 from calibration cimport CalibratedConverter as _CalibratedConverter
 from calibration cimport Calibration as _Calibration
 from range cimport Range as _Range
-from subdevice cimport Subdevice as _Subdevice
 
 from pycomedi import LOG as _LOG
 from chanspec import ChanSpec as _ChanSpec
@@ -58,10 +57,11 @@ cdef class Channel (object):
 
     >>> d.close()
     """
-    cdef public _Subdevice subdevice
+    cdef public object subdevice  # pycomedi.subdevice.Subdevice
     cdef public int index
 
     def __cinit__(self):
+        self.subdevice = None
         self.index = -1
 
     def __init__(self, subdevice, index):
@@ -69,18 +69,19 @@ cdef class Channel (object):
         self.subdevice = subdevice
         self.index = index
 
+    cdef _comedilib_h.comedi_t * _device(self):
+        return <_comedilib_h.comedi_t *> self.subdevice.device.device
+
     def get_maxdata(self):
         ret = _comedilib_h.comedi_get_maxdata(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index)
+            self._device(), self.subdevice.index, self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_maxdata', ret=ret)
         return ret
 
     def get_n_ranges(self):
         ret = _comedilib_h.comedi_get_n_ranges(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index)
+            self._device(), self.subdevice.index, self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_n_ranges', ret=ret)
         return ret
@@ -90,8 +91,7 @@ cdef class Channel (object):
         cdef _Range ret
         # Memory pointed to by the return value is freed on Device.close().
         rng = _comedilib_h.comedi_get_range(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index, index)
+            self._device(), self.subdevice.index, self.index, index)
         if rng is NULL:
             _error.raise_error(function_name='comedi_get_range')
         ret = _Range(value=index)
@@ -108,8 +108,7 @@ cdef class Channel (object):
     def _find_range(self, unit, min, max):
         "Search for range"
         ret = _comedilib_h.comedi_find_range(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(unit), min, max)
         if ret < 0:
             _error.raise_error(function_name='comedi_find_range', ret=ret)
@@ -172,8 +171,7 @@ cdef class DigitalChannel (Channel):
         `dir` should be an item from `constants.IO_DIRECTION`.
         """
         ret = _comedilib_h.comedi_dio_config(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(dir))
         if ret < 0:
             _error.raise_error(function_name='comedi_dio_config', ret=ret)
@@ -185,8 +183,7 @@ cdef class DigitalChannel (Channel):
         """
         cpdef unsigned int dir
         ret = _comedilib_h.comedi_dio_get_config(
-            self.subdevice.device.device,
-           self.subdevice.index, self.index, &dir)
+            self._device(), self.subdevice.index, self.index, &dir)
         if ret < 0:
             _error.raise_error(function_name='comedi_dio_get_config', ret=ret)
         return _constant.IO_DIRECTION.index_by_value(dir)
@@ -195,8 +192,7 @@ cdef class DigitalChannel (Channel):
         "Read a single bit"
         cpdef unsigned int bit
         ret = _comedilib_h.comedi_dio_read(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index, &bit)
+            self._device(), self.subdevice.index, self.index, &bit)
         if ret < 0:
             _error.raise_error(function_name='comedi_dio_read', ret=ret)
         return int(bit)
@@ -204,8 +200,7 @@ cdef class DigitalChannel (Channel):
     def dio_write(self, bit):
         "Write a single bit"
         ret = _comedilib_h.comedi_dio_write(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index, bit)
+            self._device(), self.subdevice.index, self.index, bit)
         if ret < 0:
             _error.raise_error(function_name='comedi_dio_write', ret=ret)
 
@@ -311,8 +306,7 @@ cdef class AnalogChannel (Channel):
         "Read one sample"
         cdef _comedi_h.lsampl_t data
         ret = _comedilib_h.comedi_data_read(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             &data)
@@ -324,8 +318,7 @@ cdef class AnalogChannel (Channel):
         "Read `n` samples (timing between samples is undefined)."
         data = _numpy.ndarray(shape=(n,), dtype=_numpy.uint32)
         ret = _comedilib_h.comedi_data_read_n(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             <_comedilib_h.lsampl_t *>_numpy.PyArray_DATA(data), n)
@@ -349,8 +342,7 @@ cdef class AnalogChannel (Channel):
         performs a conversion.
         """
         ret = _comedilib_h.comedi_data_read_hint(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref))
         if ret < 0:
@@ -365,8 +357,7 @@ cdef class AnalogChannel (Channel):
         """
         cdef _comedi_h.lsampl_t data
         ret = _comedilib_h.comedi_data_read_delayed(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             &data, int(nano_sec))
@@ -381,8 +372,7 @@ cdef class AnalogChannel (Channel):
         Returns 1 (the number of data samples written).
         """
         ret = _comedilib_h.comedi_data_write(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             int(data))
@@ -418,8 +408,7 @@ cdef class AnalogChannel (Channel):
         """
         cdef _comedilib_h.comedi_polynomial_t poly
         rc = _comedilib_h.comedi_get_hardcal_converter(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(direction), &poly)
         if rc < 0:
@@ -459,8 +448,7 @@ cdef class AnalogChannel (Channel):
             # automatically get a char * refernce into the Python string p
             path = p
         ret = _comedilib_h.comedi_apply_calibration(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             path)
@@ -471,8 +459,7 @@ cdef class AnalogChannel (Channel):
 
     cdef _apply_parsed_calibration(self, _Calibration calibration):
         ret = _comedilib_h.comedi_apply_parsed_calibration(
-            self.subdevice.device.device,
-            self.subdevice.index, self.index,
+            self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
             _constant.bitwise_value(self.aref),
             calibration.calibration)

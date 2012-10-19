@@ -1,0 +1,39 @@
+With Python 3, Cython is pickier about circular dependencies.  This is
+all well and good, but sometimes lower level objects (e.g. Subdevice
+instances) need pointers from higher level objects (e.g. Device
+instances).  How does that work?
+
+All of the C types used in the library are defined in library-specific
+``_*_h.pxd`` files at the bottom of the dependency tree.  The
+low-level objects don't really need the higher level objects (which
+would create a circular import), they need the *pointers* held by the
+higher level object.  The solution is to store higher-level objects as
+generic Python objects (e.g. Subdevice.device).  When you need the
+device ``comedi_t *`` for a subdevice method, use
+``Subdevice._device``, which assumes the ``Subdevice.device`` has been
+setup with a ``Device`` instance, and extracts the pointer with the
+appropriate casting.
+
+This deals with the circular imports, but is the casting safe?
+Kindof.  While it would be nice to do something like::
+
+  cdef class Subdevice (object):
+      cdef _comedilib_h.comedi_t * _device(self):
+          if not isinstance(self.device, _device.Device):
+              raise ValueError(self.device)
+          return <_comedilib_h.comedi_t *> self.device.device
+
+we can't perform the check without circularly importing
+``pycomedi.device``.  So the cast is blind, which could cause all
+sorts of problems.
+
+In practice, however, all ``Subdevice`` instances are likely to come
+from the ``Device.subdevice()`` method, which sets up the ``.device``
+attribute appropriately.  This means that while you *could* put
+something else in the ``.device`` attribute and blow things up, you
+probably won't do so accidentally.  This conforms to the Python style
+of assuming that we are all consenting adults.
+
+For clarity in the above, I discussed the ``Device`` / ``Subdevice``
+relationship, but the same logic holds for similar high- / low-level
+relationships (e.g. ``Subdevice`` / ``Channel``, etc.).

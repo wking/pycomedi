@@ -18,7 +18,6 @@
 
 cimport _comedi_h
 cimport _comedilib_h
-cimport device as _device
 cimport command as _command
 from pycomedi import LOG as _LOG
 import _error
@@ -68,16 +67,20 @@ cdef class Subdevice (object):
     """
     def __cinit__(self):
         self.index = -1
+        self.device = None
 
     def __init__(self, device, index):
         super(Subdevice, self).__init__()
         self.device = device
         self.index = index
 
+    cdef _comedilib_h.comedi_t * _device(self):
+        return <_comedilib_h.comedi_t *> self.device.device
+
     def get_type(self):
         "Type of subdevice (from `SUBDEVICE_TYPE`)"
         ret = _comedilib_h.comedi_get_subdevice_type(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_subdevice_type',
                                ret=ret)
@@ -86,7 +89,7 @@ cdef class Subdevice (object):
     def _get_flags(self):
         "Subdevice flags"
         ret = _comedilib_h.comedi_get_subdevice_flags(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_subdevice_flags',
                                ret=ret)
@@ -100,7 +103,7 @@ cdef class Subdevice (object):
     def get_n_channels(self):
         "Number of subdevice channels"
         ret = _comedilib_h.comedi_get_n_channels(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_n_channels',
                                ret=ret)
@@ -108,7 +111,7 @@ cdef class Subdevice (object):
 
     def range_is_chan_specific(self):
         ret = _comedilib_h.comedi_range_is_chan_specific(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(
                 function_name='comedi_range_is_chan_specific', ret=ret)
@@ -116,7 +119,7 @@ cdef class Subdevice (object):
 
     def maxdata_is_chan_specific(self):
         ret = _comedilib_h.comedi_maxdata_is_chan_specific(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(
                 function_name='comedi_maxdata_is_chan_specific', ret=ret)
@@ -124,13 +127,13 @@ cdef class Subdevice (object):
 
     def lock(self):
         "Reserve the subdevice"
-        ret = _comedilib_h.comedi_lock(self.device.device, self.index)
+        ret = _comedilib_h.comedi_lock(self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_lock', ret=ret)
 
     def unlock(self):
         "Release the subdevice"
-        ret = _comedilib_h.comedi_unlock(self.device.device, self.index)
+        ret = _comedilib_h.comedi_unlock(self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_unlock', ret=ret)
 
@@ -144,7 +147,7 @@ cdef class Subdevice (object):
         channels and the last written value of all output channels.
         """
         ret = _comedilib_h.comedi_dio_bitfield2(
-            self.device.device, self.index, write_mask, &bits, base_channel)
+            self._device(), self.index, write_mask, &bits, base_channel)
         if ret < 0:
             _error.raise_error(function_name='comedi_dio_bitfield2', ret=ret)
         return bits
@@ -262,7 +265,7 @@ cdef class StreamingSubdevice (Subdevice):
         cdef _command.Command cmd
         cmd = _command.Command()
         ret = _comedilib_h.comedi_get_cmd_src_mask(
-            self.device.device, self.index, cmd.get_comedi_cmd_pointer())
+            self._device(), self.index, cmd.get_comedi_cmd_pointer())
         if ret < 0:
             _error.raise_error(function_name='comedi_get_cmd_src_mask', ret=ret)
         return cmd
@@ -287,7 +290,7 @@ cdef class StreamingSubdevice (Subdevice):
         cdef _command.Command cmd
         cmd = _command.Command()
         ret = _comedilib_h.comedi_get_cmd_generic_timed(
-            self.device.device, self.index, cmd.get_comedi_cmd_pointer(),
+            self._device(), self.index, cmd.get_comedi_cmd_pointer(),
             chanlist_len, int(scan_period_ns))
         cmd.chanlist = [0 for i in range(chanlist_len)]
         if ret < 0:
@@ -297,21 +300,21 @@ cdef class StreamingSubdevice (Subdevice):
 
     def cancel(self):
         "Stop streaming input/output in progress."
-        ret = _comedilib_h.comedi_cancel(self.device.device, self.index)
+        ret = _comedilib_h.comedi_cancel(self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_cancel', ret=ret)
 
     def command(self):
         "Start streaming input/output"
         ret = _comedilib_h.comedi_command(
-            self.device.device, self.cmd.get_comedi_cmd_pointer())
+            self._device(), self.cmd.get_comedi_cmd_pointer())
         if ret < 0:
             _error.raise_error(function_name='comedi_command', ret=ret)
 
     def command_test(self):
         "Test streaming input/output configuration"
         ret = _comedilib_h.comedi_command_test(
-            self.device.device, self.cmd.get_comedi_cmd_pointer())
+            self._device(), self.cmd.get_comedi_cmd_pointer())
         return self._command_test_errors[ret]
 
     def poll(self):
@@ -322,7 +325,7 @@ cdef class StreamingSubdevice (Subdevice):
         buffers or device FIFOs. If successful, the number of
         additional bytes available is returned.
         """
-        ret = _comedilib_h.comedi_poll(self.device.device, self.index)
+        ret = _comedilib_h.comedi_poll(self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_poll', ret=ret)
         return ret
@@ -330,7 +333,7 @@ cdef class StreamingSubdevice (Subdevice):
     def get_buffer_size(self):
         "Streaming buffer size of subdevice"
         ret = _comedilib_h.comedi_get_buffer_size(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_buffer_size', ret=ret)
         return ret
@@ -351,7 +354,7 @@ cdef class StreamingSubdevice (Subdevice):
         `comedi_config`.
         """
         ret = _comedilib_h.comedi_set_buffer_size(
-            self.device.device, self.index, int(size))
+            self._device(), self.index, int(size))
         if ret < 0:
             _error.raise_error(function_name='comedi_set_buffer_size', ret=ret)
         return ret
@@ -359,7 +362,7 @@ cdef class StreamingSubdevice (Subdevice):
     def get_max_buffer_size(self):
         "Maximum streaming buffer size of subdevice"
         ret = _comedilib_h.comedi_get_max_buffer_size(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_max_buffer_size',
                                ret=ret)
@@ -371,7 +374,7 @@ cdef class StreamingSubdevice (Subdevice):
         Returns the old (max?) buffer size on success.
         """
         ret = _comedilib_h.comedi_set_max_buffer_size(
-            self.device.device, self.index, int(max_size))
+            self._device(), self.index, int(max_size))
         if ret < 0:
             _error.raise_error(function_name='comedi_set_max_buffer_size',
                                ret=ret)
@@ -380,7 +383,7 @@ cdef class StreamingSubdevice (Subdevice):
     def get_buffer_contents(self):
         "Number of bytes available on an in-progress command"
         ret = _comedilib_h.comedi_get_buffer_contents(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_buffer_contents',
                                ret=ret)
@@ -398,7 +401,7 @@ cdef class StreamingSubdevice (Subdevice):
         calls.
         """
         ret = _comedilib_h.comedi_mark_buffer_read(
-            self.device.device, self.index, num_bytes)
+            self._device(), self.index, num_bytes)
         if ret < 0:
             _error.raise_error(function_name='comedi_mark_buffer_read',
                                ret=ret)
@@ -416,7 +419,7 @@ cdef class StreamingSubdevice (Subdevice):
         `write()` calls.
         """
         ret = _comedilib_h.comedi_mark_buffer_written(
-            self.device.device, self.index, num_bytes)
+            self._device(), self.index, num_bytes)
         if ret < 0:
             _error.raise_error(function_name='comedi_mark_buffer_written',
                                ret=ret)
@@ -428,7 +431,7 @@ cdef class StreamingSubdevice (Subdevice):
         This offset is only useful for memory mapped buffers.
         """
         ret = _comedilib_h.comedi_get_buffer_offset(
-            self.device.device, self.index)
+            self._device(), self.index)
         if ret < 0:
             _error.raise_error(function_name='comedi_get_buffer_offset', ret=ret)
         return ret

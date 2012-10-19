@@ -451,6 +451,7 @@ cdef class CalibrationSetting (object):
     """
     def __cinit__(self):
         self.setting = NULL
+        self.subdevice = None
 
     def __init__(self, subdevice):
         super(CalibrationSetting, self).__init__()
@@ -633,6 +634,7 @@ cdef class Calibration (object):
     """
     def __cinit__(self):
         self.calibration = NULL
+        self.device = None
 
     def __init__(self, device):
         super(Calibration, self).__init__()

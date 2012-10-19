@@ -17,8 +17,6 @@
 "Expose `CalibratedConverter` internals at the C level for other Cython modules"
 
 cimport _comedilib_h
-from device cimport Device as _Device
-from subdevice cimport Subdevice as _Subdevice
 
 
 cdef class CalibratedConverter (object):
@@ -40,7 +38,7 @@ cdef class Caldac (object):
 
 cdef class CalibrationSetting (object):
     cdef _comedilib_h.comedi_calibration_setting_t *setting
-    cdef public _Subdevice subdevice
+    cdef public object subdevice  # pycomedi.subdevice.Subdevice
 
     cdef _caldacs_set_single(self, index, Caldac caldac)
     cpdef _soft_calibration_set(self, CalibratedConverter value)
@@ -48,6 +46,6 @@ cdef class CalibrationSetting (object):
 
 cdef class Calibration (object):
     cdef _comedilib_h.comedi_calibration_t *calibration
-    cdef public _Device device
+    cdef public object device  # pycomedi.device.Device
 
     cpdef from_file(self, path)
