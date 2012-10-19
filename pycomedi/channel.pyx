@@ -420,23 +420,28 @@ cdef class AnalogChannel (Channel):
         cdef _comedilib_h.comedi_polynomial_t to_physical, from_physical
         cdef _CalibratedConverter ret
         flags = self.subdevice.get_flags()
+        from_physical_error = None
         if flags.soft_calibrated:
             if calibration is None:
                 calibration = self.subdevice.device.parse_calibration()
             to_physical = self.get_softcal_converter(
                 _constant.CONVERSION_DIRECTION.to_physical,
                 calibration)
-            from_physical = self.get_softcal_converter(
-                _constant.CONVERSION_DIRECTION.from_physical,
-                calibration)
+            try:
+                from_physical = self.get_softcal_converter(
+                    _constant.CONVERSION_DIRECTION.from_physical,
+                    calibration)
+            except _PyComediError as e:
+                from_physical_error = e
         else:
             to_physical = self.get_hardcal_converter(
                 _constant.CONVERSION_DIRECTION.to_physical)
             from_physical = self.get_hardcal_converter(
                 _constant.CONVERSION_DIRECTION.from_physical)
-        ret = _CalibratedConverter()
+        ret = _CalibratedConverter(from_physical_error=from_physical_error)
         ret._to_physical = to_physical
-        ret._from_physical = from_physical
+        if from_physical_error is not None:
+            ret._from_physical = from_physical
         return ret
 
     def get_converter(self, calibration=None):

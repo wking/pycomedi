@@ -161,11 +161,32 @@ cdef class CalibratedConverter (object):
     1.0
     >>> c.get_to_physical_coefficients()
     array([ 1.,  2.,  3.])
+
+    For some soft-calibrated boards, there is no from_physical
+    conversion polynomial.
+
+    >>> c = CalibratedConverter(
+    ...     from_physical_error=Exception('no conversion polynomial'))
+    >>> c.from_physical(1.0)
+    Traceback (most recent call last):
+      ...
+    Exception: no conversion polynomial
+
+    However, even with the error, you can extract dummy coefficients.
+
+    >>> c.get_from_physical_expansion_origin()
+    0.0
+    >>> c.get_from_physical_coefficients()
+    array([ 0.])
     """
+    def __cinit__(self):
+        self._from_physical_error = None
+
     def __init__(self, to_physical_coefficients=None,
                  to_physical_expansion_origin=0,
                  from_physical_coefficients=None,
-                 from_physical_expansion_origin=0):
+                 from_physical_expansion_origin=0,
+                 from_physical_error=None):
         if to_physical_coefficients:
             _setup_comedi_polynomial_t(
                 &self._to_physical, to_physical_coefficients,
@@ -174,6 +195,7 @@ cdef class CalibratedConverter (object):
             _setup_comedi_polynomial_t(
                 &self._from_physical, from_physical_coefficients,
                  from_physical_expansion_origin)
+        self._from_physical_error = from_physical_error
 
     cdef _str_poly(self, _comedilib_h.comedi_polynomial_t polynomial):
         return '{coefficients:%s origin:%s}' % (
@@ -194,6 +216,8 @@ cdef class CalibratedConverter (object):
                         _constant.CONVERSION_DIRECTION.to_physical)
 
     cpdef from_physical(self, data):
+        if self._from_physical_error is not None:
+            raise self._from_physical_error
         return _convert(&self._from_physical, data,
                         _constant.CONVERSION_DIRECTION.from_physical)
 

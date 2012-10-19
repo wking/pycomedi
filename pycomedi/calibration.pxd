@@ -21,6 +21,7 @@ cimport _comedilib_h
 
 cdef class CalibratedConverter (object):
     cdef _comedilib_h.comedi_polynomial_t _to_physical, _from_physical
+    cdef object _from_physical_error
 
     cdef _str_poly(self, _comedilib_h.comedi_polynomial_t polynomial)
     cpdef to_physical(self, data)
