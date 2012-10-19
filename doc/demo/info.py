@@ -19,11 +19,38 @@
 """Gather and display information about a comedi device.
 """
 
+try:
+    import kmod as _kmod
+    import kmod.error as _kmod_error
+except ImportError as e:
+    _kmod = None
+    _kmod_import_error = e
+
 from pycomedi import PyComediError as _PyComediError
 import pycomedi.constant as _constant
 from pycomedi.device import Device as _Device
 from pycomedi.subdevice import StreamingSubdevice as _StreamingSubdevice
 
+
+class ModuleNotFound (ValueError):
+    pass
+
+
+def display_modinfo(module_name):
+    if _kmod is None:
+        raise _kmod_import_error
+    kmod = _kmod.Kmod()
+    mod = kmod.module_from_name(name=module_name)
+    items = [('filename', mod.path)]
+    try:
+        items.extend(mod.info.items())
+    except _kmod_error.KmodError as e:
+        raise ModuleNotFound(module_name)
+    longest_key = max(len(k) for k,v in items)
+    print('modinfo for {}'.format(module_name))
+    for k,v in items:
+        space = ' '*(longest_key + 4 - len(k))
+        print('  {}:{}{}'.format(k, space, v))
 
 def display_maxdata(subdevice):
     if subdevice.maxdata_is_chan_specific():
@@ -127,6 +154,14 @@ def run(filename):
       ranges: <Range unit:none min:0.0 max:1.0>
       command: (not supported)
     """
+    try:
+        display_modinfo('comedi')
+    except ImportError as e:
+        print('could not load module info (kmod not installed)')
+        print('  {}'.format(e))
+    except ModuleNotFound as e:
+        print('could not load module info (module not found)')
+        print('  {}'.format(e))
     device = _Device(filename=filename)
     device.open()
     try:
