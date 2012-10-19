@@ -384,7 +384,7 @@ cdef class AnalogChannel (Channel):
 
 
     cdef _comedilib_h.comedi_polynomial_t get_softcal_converter(
-        self, direction, _Calibration calibration):
+        self, direction, _Calibration calibration) except *:
         """
 
         `direction` should be a value from `constant.CONVERSION_DIRECTION`.
@@ -401,7 +401,7 @@ cdef class AnalogChannel (Channel):
         return poly
 
     cdef _comedilib_h.comedi_polynomial_t get_hardcal_converter(
-        self, direction):
+        self, direction) except *:
         """
 
         `direction` should be a value from `constant.CONVERSION_DIRECTION`.
