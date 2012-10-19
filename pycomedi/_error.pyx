@@ -38,7 +38,7 @@ def raise_error(function_name=None, ret=None, error_msg=None):
     PyComediError: myfn (some error): Success (-1)
     >>> try:
     ...     raise_error(function_name='myfn', ret=-1)
-    ... except PyComediError, e:
+    ... except PyComediError as e:
     ...     print(e.function_name)
     ...     print(e.ret)
     myfn

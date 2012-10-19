@@ -50,7 +50,7 @@ def display_max_generic_timed(subdevice):
     """Fastest supported single-channel command"""
     try:
         command = subdevice.get_cmd_generic_timed(chanlist_len=1)
-    except _PyComediError, e:
+    except _PyComediError as e:
         if e.function_name != 'comedi_get_cmd_generic_timed':
             raise
         print('  command fast 1chan: (not supported)')
@@ -68,7 +68,7 @@ def display_max_generic_timed(subdevice):
 def display_command(subdevice):
     try:
         command = subdevice.get_cmd_src_mask()
-    except _PyComediError, e:
+    except _PyComediError as e:
         if e.function_name != 'comedi_get_cmd_src_mask':
             raise
         print('  command: (not supported)')
