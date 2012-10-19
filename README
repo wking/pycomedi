@@ -34,17 +34,24 @@ Dependencies
 If you're installing by hand or packaging pycomedi for another
 distribution, you'll need the following dependencies:
 
-=======  ===================  ================  ==========================
-Package  Purpose              Debian_           Gentoo_
-=======  ===================  ================  ==========================
-NumPy_   ?                    python-numpy      dev-python/numpy
-SciPy_   testing              python-scipy      sci-libs/scipy
-Comedi_  Comedilib interface  python-comedilib  sci-libs/comedilib [#clb]_
-nose_    testing              python-nose       dev-python/nose
-Cython_  Comedilib interface  cython            dev-python/cython
-=======  ===================  ================  ==========================
+============  ===================  ================  ==============================
+Package       Purpose              Debian_           Gentoo_
+============  ===================  ================  ==============================
+NumPy_        ?                    python-numpy      dev-python/numpy
+SciPy_        testing              python-scipy      sci-libs/scipy
+Comedi_       Comedilib interface  python-comedilib  sci-libs/comedilib [#wtk]_
+nose_         testing              python-nose       dev-python/nose
+Cython_       Comedilib interface  cython            dev-python/cython
+python-kmod_  Optional ext. info.                    dev-python/python-kmod [#wtk]_
+============  ===================  ================  ==============================
 
-.. [#clb] In the `wtk overlay`_.
+.. [#wtk] In the `wtk overlay`_.
+
+If python-kmod is installed, you will get additional module
+information from the ``info.py`` demo program.  If it is not
+installed, everything will still work, but ``info.py`` will only be
+able to get the module version, not the kernel version, staging-ness,
+parameters, etc.
 
 
 Installing by hand
@@ -112,6 +119,7 @@ wking@tremily.us
 .. _SciPy: http://www.scipy.org/
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _Cython: http://www.cython.org/
+.. _python-kmod: https://github.com/agrover/python-kmod/
 .. _Git: http://git-scm.com/
 .. _homepage: http://blog.tremily.us/posts/pycomedi/
 .. _GNU General Public License Version 2:
