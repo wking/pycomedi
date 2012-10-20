@@ -69,7 +69,7 @@ cdef class Channel (object):
         self.subdevice = subdevice
         self.index = index
 
-    cdef _comedilib_h.comedi_t * _device(self):
+    cdef _comedilib_h.comedi_t * _device(self) except *:
         return <_comedilib_h.comedi_t *> self.subdevice.device.device
 
     def get_maxdata(self):

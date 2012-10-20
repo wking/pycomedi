@@ -74,7 +74,7 @@ cdef class Subdevice (object):
         self.device = device
         self.index = index
 
-    cdef _comedilib_h.comedi_t * _device(self):
+    cdef _comedilib_h.comedi_t * _device(self) except *:
         return <_comedilib_h.comedi_t *> self.device.device
 
     def get_type(self):

@@ -33,7 +33,8 @@ import constant as _constant
 import utility as _utility
 
 
-cdef void _python_to_charp(char **charp, object obj, object encoding):
+cdef void _python_to_charp(
+    char **charp, object obj, object encoding) except *:
     """Convert a Python string into a `char *`.
 
     Cython automatically converts string or byte array to a `char *`
@@ -58,7 +59,8 @@ cdef void _python_to_charp(char **charp, object obj, object encoding):
     charp[0] = ret
 
 cdef void _setup_comedi_polynomial_t(
-    _comedilib_h.comedi_polynomial_t *p, coefficients, expansion_origin):
+    _comedilib_h.comedi_polynomial_t *p, coefficients, expansion_origin
+    ) except *:
     """Setup the `comedi_polynomial_t` at `p`
 
     * `coefficients` is an iterable containing polynomial coefficients

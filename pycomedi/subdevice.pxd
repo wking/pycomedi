@@ -24,7 +24,7 @@ cdef class Subdevice (object):
     cdef public object device  # pycomedi.device.Device
     cdef public int index
 
-    cdef _comedilib_h.comedi_t * _device(self)
+    cdef _comedilib_h.comedi_t * _device(self) except *
     cpdef dio_bitfield(self, unsigned int bits=*, write_mask=*, base_channel=*)
 
 cdef class StreamingSubdevice (Subdevice):

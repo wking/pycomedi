@@ -144,7 +144,7 @@ cdef class Command (object):
         if self._cmd.data is not NULL:
             _stdlib.free(self._cmd.data)
 
-    cdef _comedi_h.comedi_cmd *get_comedi_cmd_pointer(self):
+    cdef _comedi_h.comedi_cmd *get_comedi_cmd_pointer(self) except *:
         return &self._cmd
 
     def __str__(self):
