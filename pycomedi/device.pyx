@@ -27,12 +27,14 @@ cimport _comedi_h
 cimport _comedilib_h
 import _error
 from calibration import Calibration as _Calibration
+from device_holder cimport DeviceHolder as _DeviceHolder
+from device_holder import DeviceHolder as _DeviceHolder
 from instruction cimport Insn as _Insn
 from instruction import Insn as _Insn
 from subdevice import Subdevice as _Subdevice
 
 
-cdef class Device (object):
+cdef class Device (_DeviceHolder):
     """A Comedi device
 
     >>> from . import constant
@@ -99,7 +101,6 @@ cdef class Device (object):
     >>> d.close()
     """
     def __cinit__(self):
-        self.device = NULL
         self.file = None
         self.filename = None
 

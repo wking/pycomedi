@@ -18,14 +18,12 @@
 
 cimport _comedilib_h
 from command cimport Command as _Command
+from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
 
 
-cdef class Subdevice (object):
-    cdef public object device  # pycomedi.device.Device
-    cdef public int index
-
-    cdef _comedilib_h.comedi_t * _device(self) except *
+cdef class Subdevice (_SubdeviceHolder):
     cpdef dio_bitfield(self, unsigned int bits=*, write_mask=*, base_channel=*)
+
 
 cdef class StreamingSubdevice (Subdevice):
     cdef public _Command cmd

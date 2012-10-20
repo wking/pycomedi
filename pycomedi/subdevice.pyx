@@ -25,10 +25,12 @@ from channel import Channel as _Channel
 import chanspec as _chanspec
 import constant as _constant
 import command as _command
+from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
+from subdevice_holder import SubdeviceHolder as _SubdeviceHolder
 from utility import _subdevice_dtype, _subdevice_typecode
 
 
-cdef class Subdevice (object):
+cdef class Subdevice (_SubdeviceHolder):
     """Class bundling subdevice-related functions
 
     >>> from .device import Device
@@ -65,18 +67,6 @@ cdef class Subdevice (object):
 
     >>> d.close()
     """
-    def __cinit__(self):
-        self.index = -1
-        self.device = None
-
-    def __init__(self, device, index):
-        super(Subdevice, self).__init__()
-        self.device = device
-        self.index = index
-
-    cdef _comedilib_h.comedi_t * _device(self) except *:
-        return <_comedilib_h.comedi_t *> self.device.device
-
     def get_type(self):
         "Type of subdevice (from `SUBDEVICE_TYPE`)"
         ret = _comedilib_h.comedi_get_subdevice_type(

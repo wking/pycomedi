@@ -27,6 +27,7 @@ cimport _comedilib_h
 from calibration cimport CalibratedConverter as _CalibratedConverter
 from calibration cimport Calibration as _Calibration
 from range cimport Range as _Range
+from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
 
 from pycomedi import LOG as _LOG
 from chanspec import ChanSpec as _ChanSpec
@@ -57,7 +58,7 @@ cdef class Channel (object):
 
     >>> d.close()
     """
-    cdef public object subdevice  # pycomedi.subdevice.Subdevice
+    cdef public _SubdeviceHolder subdevice
     cdef public int index
 
     def __cinit__(self):
@@ -70,7 +71,7 @@ cdef class Channel (object):
         self.index = index
 
     cdef _comedilib_h.comedi_t * _device(self) except *:
-        return <_comedilib_h.comedi_t *> self.subdevice.device.device
+        return self.subdevice._device()
 
     def get_maxdata(self):
         ret = _comedilib_h.comedi_get_maxdata(
