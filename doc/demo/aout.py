@@ -156,6 +156,8 @@ def run(filename, subdevice, channels, range, aref, mmap=False, files=[]):
         range=range, aref=aref)
     for filename in files:
         frequency,unit_output_signal = load(filename=filename)
+        if len(unit_output_signal.shape) == 1:
+            unit_output_signal.shape = (unit_output_signal.shape[0], 1)
         output_buffer = generate_output_buffer(
             ao_subdevice, ao_channels, unit_output_signal)
         setup_command(ao_subdevice, ao_channels, frequency, output_buffer)
