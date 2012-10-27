@@ -6,5 +6,6 @@ dummy_py
 *.pyc
 *.c
 *.so
+.be/id-cache
 pycomedi.egg-info
 pycomedi/*.pyc
