@@ -441,7 +441,7 @@ cdef class AnalogChannel (Channel):
                 _constant.CONVERSION_DIRECTION.from_physical)
         ret = _CalibratedConverter(from_physical_error=from_physical_error)
         ret._to_physical = to_physical
-        if from_physical_error is not None:
+        if from_physical_error is None:
             ret._from_physical = from_physical
         return ret
 
