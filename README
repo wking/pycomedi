@@ -1,14 +1,14 @@
 This package provides an object-oriented interface to the Comedi_
 drivers.  The standard Python interface bundled with Comedilib is a
 simple SWIG clone of the C interface.  In pycomedi, we convert the
-functions into class methods (see `pycomedi.classes`), so you don't
-have to worry about dragging around opaque types like `comedi_t *`
+functions into class methods (see ``pycomedi.classes``), so you don't
+have to worry about dragging around opaque types like ``comedi_t *``
 device pointers.  We also bundle related constants together in
-`_Enums` and `_Flags` (see `pycomedi.constants`), to make handling
-common operations like flag manipulations simpler.  Finally, there are
-a number of utility classes (see `pycomedi.utility`) to make common
-tasks like creating instructions or reading hardware-timed analog
-input easier.
+``_Enums`` and ``_Flags`` (see ``pycomedi.constants``), to make
+handling common operations like flag manipulations simpler.  Finally,
+there are a number of utility classes (see ``pycomedi.utility``) to
+make common tasks like creating instructions or reading hardware-timed
+analog input easier.
 
 
 Installation
@@ -71,7 +71,7 @@ standard::
 Usage
 =====
 
-See the examples in the `doc` directory.
+See the examples in the ``doc`` directory.
 
 
 Testing
