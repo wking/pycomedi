@@ -1,3 +1,4 @@
 include AUTHORS
 include COPYING
 recursive-include pycomedi *.pxd
+recursive-include doc *.txt *.py
