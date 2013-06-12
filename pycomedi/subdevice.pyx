@@ -24,12 +24,12 @@ from . import _error as _error
 from . import channel as _channel
 from . import constant as _constant
 from . import command as _command
-from pycomedi cimport subdevice_holder as _subdevice_holder
-from . import subdevice_holder as _subdevice_holder
+from pycomedi.subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
+from .subdevice_holder import SubdeviceHolder as _SubdeviceHolder
 from .utility import _subdevice_dtype, _subdevice_typecode
 
 
-cdef class Subdevice (_subdevice_holder.SubdeviceHolder):
+cdef class Subdevice (_SubdeviceHolder):
     """Class bundling subdevice-related functions
 
     >>> from .device import Device

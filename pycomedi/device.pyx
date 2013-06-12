@@ -27,14 +27,14 @@ from pycomedi cimport _comedi_h
 from pycomedi cimport _comedilib_h
 from . import _error
 from . import calibration as _calibration
-from pycomedi cimport device_holder as _device_holder
+from pycomedi.device_holder cimport DeviceHolder as _DeviceHolder
 from . import device_holder as _device_holder
 from pycomedi cimport instruction as _instruction
 from . import instruction as _instruction
 from . import subdevice as _subdevice
 
 
-cdef class Device (_device_holder.DeviceHolder):
+cdef class Device (_DeviceHolder):
     """A Comedi device
 
     >>> from . import constant

@@ -17,11 +17,11 @@
 "Expose `Device` internals at the C level for other Cython modules"
 
 from pycomedi cimport _comedilib_h
-from pycomedi cimport device_holder as _device_holder
+from pycomedi.device_holder cimport DeviceHolder as _DeviceHolder
 from pycomedi cimport instruction as _instruction
 
 
-cdef class Device (_device_holder.DeviceHolder):
+cdef class Device (_DeviceHolder):
     cdef public object file
     cdef public object filename
 

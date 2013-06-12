@@ -18,10 +18,10 @@
 
 from pycomedi cimport _comedilib_h
 from pycomedi cimport command as _command
-from pycomedi cimport subdevice_holder as _subdevice_holder
+from pycomedi.subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
 
 
-cdef class Subdevice (_subdevice_holder.SubdeviceHolder):
+cdef class Subdevice (_SubdeviceHolder):
     cpdef dio_bitfield(self, unsigned int bits=*, write_mask=*, base_channel=*)
 
 
