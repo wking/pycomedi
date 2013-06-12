@@ -295,12 +295,8 @@ cdef class Device (_DeviceHolder):
 
     def subdevices(self, **kwargs):
         "Iterate through all available subdevices."
-        ret = []
         for i in range(self.get_n_subdevices()):
-            #yield self.subdevice(i, **kwargs)
-            # Generators are not supported in Cython 0.14.1
-            ret.append(self.subdevice(i, **kwargs))
-        return ret
+            yield self.subdevice(i, **kwargs)
 
     def subdevice(self, index, factory=_subdevice.Subdevice, **kwargs):
         return factory(device=self, index=index, **kwargs)

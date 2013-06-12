@@ -123,12 +123,8 @@ cdef class Channel (object):
 
     def ranges(self, **kwargs):
         "Iterate through all available ranges."
-        ret = []
         for i in range(self.get_n_ranges()):
-            #yield self.subdevice(i, **kwargs)
-            # Generators are not supported in Cython 0.14.1
-            ret.append(self.get_range(i, **kwargs))
-        return ret
+            yield self.get_range(i, **kwargs)
 
 
 cdef class DigitalChannel (Channel):
