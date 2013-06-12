@@ -16,15 +16,15 @@
 
 "Expose `Subdevice` internals at the C level for other Cython modules"
 
-cimport _comedilib_h
-from command cimport Command as _Command
-from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
+from pycomedi cimport _comedilib_h
+from pycomedi cimport command as _command
+from pycomedi cimport subdevice_holder as _subdevice_holder
 
 
-cdef class Subdevice (_SubdeviceHolder):
+cdef class Subdevice (_subdevice_holder.SubdeviceHolder):
     cpdef dio_bitfield(self, unsigned int bits=*, write_mask=*, base_channel=*)
 
 
 cdef class StreamingSubdevice (Subdevice):
-    cdef public _Command cmd
+    cdef public _command.Command cmd
     cdef public list _command_test_errors

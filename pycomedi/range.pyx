@@ -16,11 +16,11 @@
 
 "Wrap `comedi_range` in a Python class"
 
-from constant cimport BitwiseOperator as _BitwiseOperator
-import constant as _constant
+from pycomedi import constant as _constant
+from . import constant as _constant
 
 
-cdef class Range (_BitwiseOperator):
+cdef class Range (_constant.BitwiseOperator):
     """Stucture displaying a possible channel range
 
     Warning: You probably want to use `channel.Channel.get_range()` or

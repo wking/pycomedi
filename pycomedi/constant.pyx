@@ -117,7 +117,7 @@ import sys as _sys
 import numpy as _numpy
 import comedi as _comedi
 
-from pycomedi import LOG as _LOG
+from . import LOG as _LOG
 
 
 def bitwise_value(object):

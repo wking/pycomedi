@@ -16,7 +16,7 @@
 
 "Cython interface to comedilib.h"
 
-from _comedi_h cimport *
+from pycomedi._comedi_h cimport *
 
 
 cdef extern from 'comedilib.h':

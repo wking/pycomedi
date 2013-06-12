@@ -18,8 +18,8 @@
 
 import os as _os
 
-cimport _comedilib_h
-import constant as _constant
+from pycomedi cimport _comedilib_h
+from . import constant as _constant
 
 
 def set_loglevel(level):

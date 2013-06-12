@@ -1,6 +1,6 @@
 # Copyright
 
-cimport _comedilib_h
+from pycomedi cimport _comedilib_h
 
 
 cdef class DeviceHolder (object):

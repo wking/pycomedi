@@ -21,20 +21,20 @@
 import os as _os
 cimport libc.stdlib as _stdlib
 
-from pycomedi import LOG as _LOG
-from pycomedi import PyComediError as _PyComediError
-cimport _comedi_h
-cimport _comedilib_h
-import _error
-from calibration import Calibration as _Calibration
-from device_holder cimport DeviceHolder as _DeviceHolder
-from device_holder import DeviceHolder as _DeviceHolder
-from instruction cimport Insn as _Insn
-from instruction import Insn as _Insn
-from subdevice import Subdevice as _Subdevice
+from . import LOG as _LOG
+from . import PyComediError as _PyComediError
+from pycomedi cimport _comedi_h
+from pycomedi cimport _comedilib_h
+from . import _error
+from . import calibration as _calibration
+from pycomedi cimport device_holder as _device_holder
+from . import device_holder as _device_holder
+from pycomedi cimport instruction as _instruction
+from . import instruction as _instruction
+from . import subdevice as _subdevice
 
 
-cdef class Device (_DeviceHolder):
+cdef class Device (_device_holder.DeviceHolder):
     """A Comedi device
 
     >>> from . import constant
@@ -229,7 +229,7 @@ cdef class Device (_DeviceHolder):
         Returns the number of successfully completed instructions.
         """
         cdef _comedi_h.comedi_insnlist il
-        cdef _Insn i
+        cdef _instruction.Insn i
         il.n_insns = len(insnlist)
         if il.n_insns == 0:
             return
@@ -251,7 +251,7 @@ cdef class Device (_DeviceHolder):
             _error.raise_error(function_name='comedi_do_insnlist', ret=ret)
         return ret
 
-    cpdef do_insn(self, _Insn insn):
+    cpdef do_insn(self, _instruction.Insn insn):
         """Preform a single instruction.
 
         Returns an instruction-specific integer.
@@ -284,14 +284,14 @@ cdef class Device (_DeviceHolder):
         """
         if path is None:
             path = self.get_default_calibration_path()
-        c = _Calibration(device=self)
+        c = _calibration.Calibration(device=self)
         c.from_file(path)
         return c
 
     # extensions to make a more idomatic Python interface
 
     def insn(self):
-        return _Insn()
+        return _instruction.Insn()
 
     def subdevices(self, **kwargs):
         "Iterate through all available subdevices."
@@ -302,5 +302,5 @@ cdef class Device (_DeviceHolder):
             ret.append(self.subdevice(i, **kwargs))
         return ret
 
-    def subdevice(self, index, factory=_Subdevice, **kwargs):
+    def subdevice(self, index, factory=_subdevice.Subdevice, **kwargs):
         return factory(device=self, index=index, **kwargs)

@@ -19,11 +19,11 @@
 cimport libc.stdlib as _stdlib
 import numpy as _numpy
 
-cimport _comedi_h
-cimport _comedilib_h
-from pycomedi import PyComediError as _PyComediError
-from chanspec import ChanSpec as _ChanSpec
-import constant as _constant
+from pycomedi cimport _comedi_h
+from pycomedi cimport _comedilib_h
+from . import PyComediError as _PyComediError
+from . import chanspec as _chanspec
+from . import constant as _constant
 
 
 cdef class Insn (object):
@@ -125,7 +125,7 @@ cdef class Insn (object):
     subdev = property(fget=_subdev_get, fset=_subdev_set)
 
     def _chanspec_get(self):
-        c = _ChanSpec()
+        c = _chanspec.ChanSpec()
         c.value = self._insn.chanspec
         return c
     def _chanspec_set(self, value):

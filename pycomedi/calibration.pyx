@@ -26,11 +26,11 @@ from libc cimport string as _string
 cimport numpy as _numpy
 import numpy as _numpy
 
-cimport _comedi_h
-cimport _comedilib_h
-import _error
-import constant as _constant
-import utility as _utility
+from pycomedi cimport _comedi_h
+from pycomedi cimport _comedilib_h
+from . import _error
+from . import constant as _constant
+from . import utility as _utility
 
 
 cdef void _python_to_charp(

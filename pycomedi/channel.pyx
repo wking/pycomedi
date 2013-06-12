@@ -22,18 +22,17 @@ cimport cython
 cimport numpy as _numpy
 import numpy as _numpy
 
-cimport _comedi_h
-cimport _comedilib_h
-from calibration cimport CalibratedConverter as _CalibratedConverter
-from calibration cimport Calibration as _Calibration
-from range cimport Range as _Range
-from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
+from pycomedi cimport _comedi_h
+from pycomedi cimport _comedilib_h
+from pycomedi cimport calibration as _calibration
+from pycomedi cimport range as _range
+from pycomedi cimport subdevice_holder as _subdevice_holder
 
-from pycomedi import LOG as _LOG
-from chanspec import ChanSpec as _ChanSpec
-from pycomedi import PyComediError as _PyComediError
-import _error
-import constant as _constant
+from . import LOG as _LOG
+from . import PyComediError as _PyComediError
+from . import _error
+from . import chanspec as _chanspec
+from . import constant as _constant
 
 
 cdef class Channel (object):
@@ -58,7 +57,7 @@ cdef class Channel (object):
 
     >>> d.close()
     """
-    cdef public _SubdeviceHolder subdevice
+    cdef public _subdevice_holder.SubdeviceHolder subdevice
     cdef public int index
 
     def __cinit__(self):
@@ -89,13 +88,13 @@ cdef class Channel (object):
 
     cdef _get_range(self, index):
         cdef _comedilib_h.comedi_range *rng
-        cdef _Range ret
+        cdef _range.Range ret
         # Memory pointed to by the return value is freed on Device.close().
         rng = _comedilib_h.comedi_get_range(
             self._device(), self.subdevice.index, self.index, index)
         if rng is NULL:
             _error.raise_error(function_name='comedi_get_range')
-        ret = _Range(value=index)
+        ret = _range.Range(value=index)
         ret.set_comedi_range(rng[0])
         # rng[0] is a sneaky way to dereference rng, since Cython
         # doesn't support *rng.
@@ -280,7 +279,7 @@ cdef class AnalogChannel (Channel):
     >>> c.range
     <Range unit:volt min:-10.0 max:10.0>
     """
-    cdef public _Range range
+    cdef public _range.Range range
     cdef public object aref
 
     def __init__(self, range=None, aref=None, **kwargs):
@@ -381,11 +380,12 @@ cdef class AnalogChannel (Channel):
             _error.raise_error(function_name='comedi_data_write', ret=ret)
 
     def chanspec(self):
-        return _ChanSpec(chan=self.index, range=self.range, aref=self.aref)
+        return _chanspec.ChanSpec(
+            chan=self.index, range=self.range, aref=self.aref)
 
 
     cdef _comedilib_h.comedi_polynomial_t get_softcal_converter(
-        self, direction, _Calibration calibration) except *:
+        self, direction, _calibration.Calibration calibration) except *:
         """Get a calibration polynomial for a software-calibrated channel
 
         `direction` should be a value from `constant.CONVERSION_DIRECTION`.
@@ -417,9 +417,9 @@ cdef class AnalogChannel (Channel):
                                ret=rc)
         return poly
 
-    cdef _get_converter(self, _Calibration calibration):
+    cdef _get_converter(self, _calibration.Calibration calibration):
         cdef _comedilib_h.comedi_polynomial_t to_physical, from_physical
-        cdef _CalibratedConverter ret
+        cdef _calibration.CalibratedConverter ret
         flags = self.subdevice.get_flags()
         from_physical_error = None
         if flags.soft_calibrated:
@@ -439,7 +439,8 @@ cdef class AnalogChannel (Channel):
                 _constant.CONVERSION_DIRECTION.to_physical)
             from_physical = self.get_hardcal_converter(
                 _constant.CONVERSION_DIRECTION.from_physical)
-        ret = _CalibratedConverter(from_physical_error=from_physical_error)
+        ret = _calibration.CalibratedConverter(
+            from_physical_error=from_physical_error)
         ret._to_physical = to_physical
         if from_physical_error is None:
             ret._from_physical = from_physical
@@ -463,7 +464,7 @@ cdef class AnalogChannel (Channel):
                 function_name='comedi_apply_calibration', ret=ret)
         return ret
 
-    cdef _apply_parsed_calibration(self, _Calibration calibration):
+    cdef _apply_parsed_calibration(self, _calibration.Calibration calibration):
         ret = _comedilib_h.comedi_apply_parsed_calibration(
             self._device(), self.subdevice.index, self.index,
             _constant.bitwise_value(self.range),
@@ -474,7 +475,8 @@ cdef class AnalogChannel (Channel):
                 function_name='comedi_apply_parsed_calibration', ret=ret)
         return ret
 
-    def apply_calibration(self, _Calibration calibration=None, path=None):
+    def apply_calibration(self, _calibration.Calibration calibration=None,
+                          path=None):
         """Apply a calibration to this channel configuration
 
         `calibration` may None or a `Calibration` instance.  If it is
