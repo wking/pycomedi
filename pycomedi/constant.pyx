@@ -231,7 +231,12 @@ class _Enum (list):
             translation = {}
         self._name_keys = {}
         self._value_keys = {}
-        for attr in dir(_comedi):
+        mod = _comedi
+        if hasattr(mod, 'wrapped'):
+            mod = mod.wrapped
+            if prefix.startswith('COMEDI_'):
+                prefix = prefix[len('COMEDI_'):]
+        for attr in dir(mod):
             if attr.startswith(prefix):
                 item_name = self._item_name(attr, prefix, translation)
                 if self._is_ignored(item_name, blacklist, whitelist):
