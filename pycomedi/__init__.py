@@ -19,7 +19,7 @@
 import logging as _logging
 
 
-__version__ = '0.7'
+__version__ = '0.8'
 
 
 LOG = _logging.getLogger('pycomedi')
