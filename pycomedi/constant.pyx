@@ -257,6 +257,8 @@ class _Enum (list):
 
     def _add_item(self, attr, item_name):
         item_value = getattr(_comedi, attr)
+        if not isinstance(item_value, int):
+            return  # item_name collided with another object, skip this non-int
         if item_value < 0:
             _LOG.debug('big value for {0:s}: {1:d} ({1:b}) converted to {2:d} ({2:b})'.format(
                     attr, item_value, (1<<32) + item_value))
