@@ -16,8 +16,8 @@
 
 "Replace Comedi's CR_PACK and related macros with a Python class"
 
-cimport _comedi_h
-import constant as _constant
+from pycomedi cimport _comedi_h
+from . import constant as _constant
 
 
 class ChanSpec (_constant.BitwiseOperator):

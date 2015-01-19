@@ -16,18 +16,17 @@
 
 "Wrap subdevice-wide Comedi functions in `Subdevice` and related classes"
 
-cimport _comedi_h
-cimport _comedilib_h
-cimport command as _command
-from pycomedi import LOG as _LOG
-import _error
-from channel import Channel as _Channel
-import chanspec as _chanspec
-import constant as _constant
-import command as _command
-from subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
-from subdevice_holder import SubdeviceHolder as _SubdeviceHolder
-from utility import _subdevice_dtype, _subdevice_typecode
+from pycomedi cimport _comedi_h
+from pycomedi cimport _comedilib_h
+from pycomedi cimport command as _command
+from . import LOG as _LOG
+from . import _error as _error
+from . import channel as _channel
+from . import constant as _constant
+from . import command as _command
+from pycomedi.subdevice_holder cimport SubdeviceHolder as _SubdeviceHolder
+from .subdevice_holder import SubdeviceHolder as _SubdeviceHolder
+from .utility import _subdevice_dtype, _subdevice_typecode
 
 
 cdef class Subdevice (_SubdeviceHolder):
@@ -151,14 +150,10 @@ cdef class Subdevice (_SubdeviceHolder):
 
     def channels(self, **kwargs):
         "Iterate through all available channels."
-        ret = []
         for i in range(self.get_n_channels()):
-            #yield self.channel(i, **kwargs)
-            # Generators are not supported in Cython 0.14.1
-            ret.append(self.channel(i, **kwargs))
-        return ret
+            yield self.channel(i, **kwargs)
 
-    def channel(self, index, factory=_Channel, **kwargs):
+    def channel(self, index, factory=_channel.Channel, **kwargs):
         "`Channel` instance for the `index`\ed channel."
         return factory(subdevice=self, index=index, **kwargs)
 

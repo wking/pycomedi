@@ -16,8 +16,8 @@
 
 "Wrap `comedi_range` in a Python class"
 
-from constant cimport BitwiseOperator as _BitwiseOperator
-import constant as _constant
+from pycomedi.constant cimport BitwiseOperator as _BitwiseOperator
+from . import constant as _constant
 
 
 cdef class Range (_BitwiseOperator):

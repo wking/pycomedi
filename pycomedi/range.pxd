@@ -16,8 +16,8 @@
 
 "Expose `Range` internals at the C level for other Cython modules"
 
-cimport _comedilib_h
-from constant cimport BitwiseOperator as _BitwiseOperator
+from pycomedi cimport _comedilib_h
+from pycomedi.constant cimport BitwiseOperator as _BitwiseOperator
 
 
 cdef class Range (_BitwiseOperator):

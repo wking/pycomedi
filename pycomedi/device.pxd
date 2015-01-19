@@ -16,9 +16,9 @@
 
 "Expose `Device` internals at the C level for other Cython modules"
 
-cimport _comedilib_h
-from device_holder cimport DeviceHolder as _DeviceHolder
-from instruction cimport Insn as _Insn
+from pycomedi cimport _comedilib_h
+from pycomedi.device_holder cimport DeviceHolder as _DeviceHolder
+from pycomedi cimport instruction as _instruction
 
 
 cdef class Device (_DeviceHolder):
@@ -26,4 +26,4 @@ cdef class Device (_DeviceHolder):
     cdef public object filename
 
     cpdef do_insnlist(self, insnlist)
-    cpdef do_insn(self, _Insn insn)
+    cpdef do_insn(self, _instruction.Insn insn)

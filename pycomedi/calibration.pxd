@@ -16,7 +16,7 @@
 
 "Expose `CalibratedConverter` internals at the C level for other Cython modules"
 
-cimport _comedilib_h
+from pycomedi cimport _comedilib_h
 
 
 cdef class CalibratedConverter (object):

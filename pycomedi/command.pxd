@@ -16,7 +16,7 @@
 
 "Expose `Command` internals at the C level for other Cython modules"
 
-cimport _comedi_h
+from pycomedi cimport _comedi_h
 
 
 cdef class Command (object):

@@ -1,11 +1,11 @@
 # Copyright
 
-cimport _comedilib_h
-from device_holder cimport DeviceHolder as _DeviceHolder
+from pycomedi cimport _comedilib_h
+from pycomedi cimport device_holder as _device_holder
 
 
 cdef class SubdeviceHolder (object):
-    cdef public _DeviceHolder device
+    cdef public _device_holder.DeviceHolder device
     cdef public int index
 
     cdef _comedilib_h.comedi_t * _device(self) except *

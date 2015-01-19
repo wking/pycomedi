@@ -16,12 +16,10 @@
 
 "Useful error checking wrappers around Comedilib function calls"
 
-# No relative imports in Cython yet, see
-#   http://trac.cython.org/cython_trac/ticket/542
-from pycomedi import LOG as _LOG
-from pycomedi import PyComediError as _PyComediError
+from . import LOG as _LOG
+from . import PyComediError as _PyComediError
 
-cimport _comedilib_h
+from pycomedi cimport _comedilib_h
 
 
 def raise_error(function_name=None, ret=None, error_msg=None):
