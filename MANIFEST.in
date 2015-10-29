@@ -1,5 +1,5 @@
 include AUTHORS
 include COPYING
-inclide test.sh
+include test.sh
 recursive-include pycomedi *.pxd
 recursive-include doc *.txt *.py
